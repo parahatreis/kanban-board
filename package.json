@@ -1,0 +1,18 @@
+{
+  "name": "kanban-board",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,api -c blue,green \"yarn workspace web dev\" \"yarn workspace api dev\"",
+    "build": "yarn workspace shared build && yarn workspace web build && yarn workspace api build",
+    "typecheck": "yarn workspace shared exec tsc --noEmit -p tsconfig.json && yarn workspace api exec tsc --noEmit -p tsconfig.json && yarn workspace web exec tsc -b"
+  },
+  "packageManager": "yarn@3.6.4+sha512.e70835d4d6d62c07be76b3c1529cb640c7443f0fe434ef4b6478a5a399218cbaf1511b396b3c56eb03bc86424cff2320f6167ad2fde273aa0df6e60b7754029f",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^6.0.2"
+  }
+}
