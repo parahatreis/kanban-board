@@ -1,10 +1,6 @@
+import { Filter } from "lucide-react";
 import { useMemo } from "react";
-import {
-  useBoardStore,
-  getCanDrag,
-  type GroupByMode,
-} from "@/stores/board-store";
-import { Label } from "@/components/ui/label";
+import { useBoardStore, getCanDrag } from "@/stores/board-store";
 import {
   Select,
   SelectContent,
@@ -17,8 +13,6 @@ export function FilterBar() {
   const cards = useBoardStore((s) => s.cards);
   const labelFilter = useBoardStore((s) => s.labelFilter);
   const setLabelFilter = useBoardStore((s) => s.setLabelFilter);
-  const groupBy = useBoardStore((s) => s.groupBy);
-  const setGroupBy = useBoardStore((s) => s.setGroupBy);
   const canDrag = useBoardStore((s) => getCanDrag(s));
 
   const labelOptions = useMemo(() => {
@@ -28,21 +22,21 @@ export function FilterBar() {
   }, [cards]);
 
   return (
-    <div className="space-y-3">
+    <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
       {!canDrag ? (
-        <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
-          Drag and drop is paused while a label filter is active or cards are grouped by label.
-          Clear the filter and set group-by to &quot;None&quot; to move cards.
+        <p className="w-full text-[10px] leading-relaxed text-muted-foreground sm:order-first">
+          Drag and drop is paused while a label filter is active.
         </p>
       ) : null}
-      <div className="flex flex-wrap items-end gap-6">
-      <div className="space-y-2">
-        <Label htmlFor="filter-label">Filter by label</Label>
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
         <Select
           value={labelFilter.length ? labelFilter : "__all__"}
           onValueChange={(v) => setLabelFilter(v === "__all__" ? "" : v)}
         >
-          <SelectTrigger id="filter-label" className="w-[200px]">
+          <SelectTrigger
+            className="h-8 w-full min-w-[140px] max-w-[220px] border-border/80 bg-background text-xs shadow-sm sm:w-[200px]"
+            aria-label="Filter by label"
+          >
             <SelectValue placeholder="All labels" />
           </SelectTrigger>
           <SelectContent>
@@ -55,22 +49,6 @@ export function FilterBar() {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="group-by">Group by</Label>
-        <Select
-          value={groupBy}
-          onValueChange={(v) => setGroupBy(v as GroupByMode)}
-        >
-          <SelectTrigger id="group-by" className="w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">None</SelectItem>
-            <SelectItem value="label">Label</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
     </div>
   );
 }

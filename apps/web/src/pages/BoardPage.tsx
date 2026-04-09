@@ -1,20 +1,31 @@
-import { useParams } from "react-router-dom";
+import { useLayoutEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 import { Board } from "@/components/board/Board";
-import { DEMO_BOARD_ID } from "@/mocks/demo-board";
+import { isKnownBoardId } from "@/mocks/board-datasets";
+import { useBoardStore } from "@/stores/board-store";
 
 export function BoardPage() {
   const { boardId } = useParams();
+  const loadBoard = useBoardStore((s) => s.loadBoard);
 
-  if (boardId !== DEMO_BOARD_ID) {
+  useLayoutEffect(() => {
+    if (!boardId || !isKnownBoardId(boardId)) return;
+    loadBoard(boardId);
+  }, [boardId, loadBoard]);
+
+  if (!boardId || !isKnownBoardId(boardId)) {
     return (
-      <main className="p-6">
-        <p className="text-muted-foreground">Board not found.</p>
+      <main className="flex flex-1 flex-col overflow-hidden p-6">
+        <p className="text-xs text-muted-foreground">Board not found.</p>
+        <Link to="/" className="mt-4 text-xs font-medium text-primary underline-offset-4 hover:underline">
+          Back to boards
+        </Link>
       </main>
     );
   }
 
   return (
-    <main className="flex-1 px-6 py-8 max-w-[1600px] mx-auto w-full">
+    <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <Board />
     </main>
   );

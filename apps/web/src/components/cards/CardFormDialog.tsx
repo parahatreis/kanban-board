@@ -44,6 +44,8 @@ type CreateProps = {
   boardId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** When set, the create form opens with this column selected (e.g. column “Add task”). */
+  defaultColumnId?: string;
 };
 
 type EditProps = {
@@ -67,6 +69,7 @@ export function CardFormDialog(props: CardFormDialogProps) {
         boardId={props.boardId}
         open={props.open}
         onOpenChange={props.onOpenChange}
+        defaultColumnId={props.defaultColumnId}
         columns={columns}
         addCard={addCard}
       />
@@ -88,12 +91,14 @@ function CreateCardFormInner({
   boardId,
   open,
   onOpenChange,
+  defaultColumnId,
   columns,
   addCard,
 }: {
   boardId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultColumnId?: string;
   columns: { id: string; title: string }[];
   addCard: (input: CardCreateForm) => void;
 }) {
@@ -110,8 +115,13 @@ function CreateCardFormInner({
 
   useEffect(() => {
     form.setValue("boardId", boardId);
-    if (columns[0]?.id) form.setValue("columnId", columns[0].id);
-  }, [boardId, columns, form]);
+    const fallback = columns[0]?.id ?? "";
+    const preferred =
+      defaultColumnId && columns.some((c) => c.id === defaultColumnId)
+        ? defaultColumnId
+        : fallback;
+    if (preferred) form.setValue("columnId", preferred);
+  }, [boardId, columns, defaultColumnId, form]);
 
   const onSubmit = form.handleSubmit((data) => {
     addCard(data);

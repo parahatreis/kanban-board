@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { CardCreateForm, CardEditForm, CardRow, ColumnRow } from "shared";
+import type { BoardRow, CardCreateForm, CardEditForm, CardRow, ColumnRow } from "shared";
 import { applyMove, applyReorderInColumn } from "@/lib/board-dnd";
 import {
   DEMO_BOARD_ID,
@@ -7,18 +7,16 @@ import {
   demoCards,
   demoColumns,
 } from "@/mocks/demo-board";
-
-export type GroupByMode = "none" | "label";
+import { getBoardDataset } from "@/mocks/board-datasets";
 
 export interface BoardStoreState {
+  board: BoardRow;
   boardId: string;
   columns: ColumnRow[];
   cards: CardRow[];
   /** Empty string = show all labels */
   labelFilter: string;
-  groupBy: GroupByMode;
   setLabelFilter: (value: string) => void;
-  setGroupBy: (v: GroupByMode) => void;
   addCard: (input: CardCreateForm) => void;
   updateCard: (cardId: string, patch: CardEditForm & { columnId?: string }) => void;
   deleteCard: (cardId: string) => void;
@@ -29,6 +27,8 @@ export interface BoardStoreState {
   ) => void;
   /** Aligns with PATCH /api/columns/:id/reorder — `orderedCardIds` is full column order. */
   reorderInColumn: (columnId: string, orderedCardIds: string[]) => void;
+  /** Replace columns/cards from mock data for the given board (client-side only). */
+  loadBoard: (boardId: string) => boolean;
 }
 
 function nextPositionInColumn(cards: CardRow[], columnId: string): number {
@@ -55,15 +55,26 @@ function renormalizePositions(
 }
 
 export const useBoardStore = create<BoardStoreState>((set, get) => ({
+  board: demoBoard,
   boardId: DEMO_BOARD_ID,
   columns: [...demoColumns].sort((a, b) => a.position - b.position),
   cards: [...demoCards],
   labelFilter: "",
-  groupBy: "none",
+
+  loadBoard: (boardId) => {
+    const data = getBoardDataset(boardId);
+    if (!data) return false;
+    set({
+      board: data.board,
+      boardId: data.board.id,
+      columns: [...data.columns].sort((a, b) => a.position - b.position),
+      cards: [...data.cards],
+      labelFilter: "",
+    });
+    return true;
+  },
 
   setLabelFilter: (labelFilter) => set({ labelFilter }),
-
-  setGroupBy: (groupBy) => set({ groupBy }),
 
   addCard: (input) => {
     const { cards } = get();
@@ -120,14 +131,8 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
   },
 }));
 
-/** Drag-and-drop is only enabled with no label filter and group-by off (see Phase 5 plan). */
-export function getCanDrag(state: {
-  labelFilter: string;
-  groupBy: GroupByMode;
-}): boolean {
-  return state.labelFilter === "" && state.groupBy === "none";
+/** Drag-and-drop is only enabled when no label filter is active. */
+export function getCanDrag(state: { labelFilter: string }): boolean {
+  return state.labelFilter === "";
 }
 
-export function getDemoBoardMeta() {
-  return { board: demoBoard, boardId: DEMO_BOARD_ID };
-}

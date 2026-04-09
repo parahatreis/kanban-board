@@ -203,6 +203,35 @@ Indexes: FK columns and `(board_id, label)`, `(column_id, position)` as needed f
 
 ---
 
+### Phase 7 — Extended requirements (optional)
+
+From the challenge [Extended Requirements (Optional)](./Ravenna%20Coding%20Challenge.md#extended-requirements-optional).
+
+**Frontend**
+
+- [ ] Card details panel (subtasks, tags, comments)
+- [ ] Column creation/reordering
+- [ ] Keyboard shortcuts
+- [ ] Dark mode or theming
+- [ ] Mobile responsiveness
+
+**Backend**
+
+- [ ] Pagination or search
+- [ ] Soft delete
+- [ ] Basic concurrency safety for reordering
+- [ ] Simple rate limiting
+
+**Engineering quality**
+
+- [ ] Integration tests
+- [ ] Structured logging
+- [ ] Performance optimizations for large boards
+
+**Exit**: No required gate; pick items by priority and document trade-offs in the README.
+
+---
+
 ## README checklist (challenge documentation)
 
 When implementing, ensure the README includes:
@@ -219,7 +248,9 @@ When implementing, ensure the README includes:
 
 ## Optional / bonus (post-MVP)
 
-From the challenge: card details panel (subtasks, tags, comments); column create/reorder; keyboard shortcuts; dark mode; mobile polish; pagination/search; soft delete; concurrency for reorder; rate limiting; integration tests; structured logging; performance notes; deployed demo; explicit UX documentation.
+**Extended optional scope**: [Phase 7](#phase-7--extended-requirements-optional) (challenge extended requirements).
+
+**Additional challenge bonus** (not duplicated in Phase 7): deployed demo; clear UX decision documentation; well-explained trade-offs (schema/migrations are already part of core phases).
 
 ---
 
