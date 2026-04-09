@@ -28,3 +28,22 @@ export type UserInsert = z.infer<typeof userInsertSchema>;
 export type BoardInsert = z.infer<typeof boardInsertSchema>;
 export type ColumnInsert = z.infer<typeof columnInsertSchema>;
 export type CardInsert = z.infer<typeof cardInsertSchema>;
+
+/** Create-card form (aligned with API body; position is assigned server-side / in store). */
+export const cardCreateFormSchema = z.object({
+  boardId: z.string().uuid(),
+  columnId: z.string().uuid(),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  label: z.string().optional(),
+});
+
+/** Edit-card form fields (subset of patch). */
+export const cardEditFormSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().optional(),
+  label: z.string().optional(),
+});
+
+export type CardCreateForm = z.infer<typeof cardCreateFormSchema>;
+export type CardEditForm = z.infer<typeof cardEditFormSchema>;
