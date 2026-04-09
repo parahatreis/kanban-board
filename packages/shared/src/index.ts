@@ -1,6 +1,3 @@
-import { z } from "zod";
+export { SHARED_VERSION } from "./meta.js";
 
-/** Placeholder schema; real board/card schemas in later phases. */
-export const placeholderSchema = z.object({ ok: z.literal(true) });
-
-export const SHARED_VERSION = "0.0.0" as const;
+export * from "./schema/index.js";

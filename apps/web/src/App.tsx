@@ -1,4 +1,4 @@
-import { SHARED_VERSION } from "shared";
+import { SHARED_VERSION } from "shared/meta";
 
 export default function App() {
   return (

@@ -8,7 +8,7 @@ This document translates the [Ravenna Coding Challenge](./Ravenna%20Coding%20Cha
 
 - **Product**: Small Kanban board with a React frontend and a backend API ([challenge brief](./Ravenna%20Coding%20Challenge.md)).
 - **Timebox**: 4–6 hours (challenge expectation).
-- **User model**: Single user; no authentication required.
+- **User model**: Challenge assumes a **single end user** (no login required). The **database** still includes a **`users`** table so boards have an owner (`boards.user_id` → `users.id`); the app can use one fixed or implicit user until real auth is added.
 - **Evaluation (20 pts)**: Frontend implementation (7), product and interaction design (6), backend implementation (5), infrastructure and setup (2).
 - **Submission**: Source code, README, assumptions and trade-offs, optional deployed link.
 
@@ -65,7 +65,7 @@ flowchart LR
 | Client state | Zustand | Board/card UI state; explain choice in README |
 | Forms | React Hook Form + Zod | Create/edit card modals; validation aligned with shared schemas |
 | Backend | Fastify, Zod | HTTP API, request validation, consistent error shape |
-| Persistence | Drizzle ORM, PostgreSQL | Boards, columns, cards; migrations |
+| Persistence | Drizzle ORM, PostgreSQL | Users, boards, columns, cards; migrations |
 | Shared | `packages/shared` | Zod schemas, inferred types, enums, small pure helpers |
 
 **Challenge mapping**: Type-safe server and client; validation and consistent errors; logging and tests on the API; component structure (Board, Column, Card, filters); keyboard-friendly modals; basic accessibility; tests for core logic (create, move, filter, group).
@@ -98,7 +98,7 @@ flowchart LR
 
 Keep this package **framework-agnostic**:
 
-- Entity-related **Zod** schemas and **TypeScript types** (inferred from Zod where possible): e.g. board, column, card; create/update payloads.
+- Entity-related **Zod** schemas and **TypeScript types** (inferred from Zod where possible): e.g. user, board, column, card; create/update payloads.
 - Shared **enums** or string unions for filter/group dimensions (aligned with persisted fields).
 - Pure **helpers** (e.g. ordering indices, sorting keys for grouped views) with no I/O.
 
@@ -121,6 +121,19 @@ Exact paths and request bodies should be validated with **Zod** (shared schemas 
 
 ---
 
+## Data model (PostgreSQL / Drizzle)
+
+| Table | Purpose |
+|--------|---------|
+| `users` | `id` (uuid), unique `email`, optional `display_name`, `created_at` |
+| `boards` | `id`, **`user_id`** → `users`, `name`, `created_at` |
+| `columns` | `id`, `board_id` → `boards`, `title`, `position` (order within board) |
+| `cards` | `id`, `board_id`, `column_id`, `title`, `description`, `position`, `label` (filter/group) |
+
+Indexes: FK columns and `(board_id, label)`, `(column_id, position)` as needed for list and reorder queries.
+
+---
+
 ## Phases / Roadmap
 
 ### Phase 1 — Root repo structure
@@ -136,7 +149,7 @@ Exact paths and request bodies should be validated with **Zod** (shared schemas 
 
 ### Phase 2 — Backend core and DB/model structures (no HTTP APIs)
 
-- **Drizzle** schema: boards, columns, cards (IDs, foreign keys, ordering fields, card title/description and filter/group attributes).
+- **Drizzle** schema: **users** (unique email), **boards** (owned by `user_id`), columns, cards (IDs, foreign keys, ordering fields, card title/description and filter/group attributes).
 - PostgreSQL connection module; migrations generated/applied as per Drizzle workflow.
 - Data access: repositories or direct Drizzle queries in a dedicated layer (`db/`, `models/`, etc.).
 - Align **`packages/shared`** Zod schemas and types with DB columns.
@@ -197,7 +210,7 @@ When implementing, ensure the README includes:
 - [ ] Setup and run instructions (Node/Yarn versions, env vars, DB, migrations, dev commands)
 - [ ] Architecture overview (monorepo, apps, shared package)
 - [ ] State management approach (Zustand) — brief rationale
-- [ ] Database and schema overview (Drizzle, main tables)
+- [ ] Database and schema overview (Drizzle: users, boards, columns, cards)
 - [ ] API overview (main routes and purposes)
 - [ ] Key UX decisions
 - [ ] Trade-offs and future improvements
