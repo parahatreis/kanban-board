@@ -1,12 +1,11 @@
-import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadMonorepoEnv } from "./src/lib/load-env.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-config({ path: path.join(__dirname, "../../.env") });
-config({ path: path.join(__dirname, ".env") });
+loadMonorepoEnv();
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {

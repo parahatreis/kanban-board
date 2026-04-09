@@ -4,9 +4,7 @@
  *
  * Idempotent: if a board named "Demo board" already exists for the demo user, exits without duplicating.
  */
-import { config } from "dotenv";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { loadMonorepoEnv } from "../lib/load-env.js";
 import {
   createDb,
   createPool,
@@ -18,13 +16,10 @@ import {
   listBoardsByUser,
 } from "../db/index.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 const DEMO_EMAIL = "demo@kanban.local";
 const DEMO_BOARD_NAME = "Demo board";
 
-config({ path: path.join(__dirname, "../../../../.env") });
-config({ path: path.join(__dirname, "../../../.env") });
+loadMonorepoEnv();
 
 function getDatabaseUrl(): string {
   const url = process.env.DATABASE_URL;
