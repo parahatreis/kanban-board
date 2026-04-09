@@ -1,5 +1,9 @@
 import { useMemo } from "react";
-import { useBoardStore, type GroupByMode } from "@/stores/board-store";
+import {
+  useBoardStore,
+  getCanDrag,
+  type GroupByMode,
+} from "@/stores/board-store";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -15,6 +19,7 @@ export function FilterBar() {
   const setLabelFilter = useBoardStore((s) => s.setLabelFilter);
   const groupBy = useBoardStore((s) => s.groupBy);
   const setGroupBy = useBoardStore((s) => s.setGroupBy);
+  const canDrag = useBoardStore((s) => getCanDrag(s));
 
   const labelOptions = useMemo(() => {
     return Array.from(
@@ -23,7 +28,14 @@ export function FilterBar() {
   }, [cards]);
 
   return (
-    <div className="flex flex-wrap items-end gap-6">
+    <div className="space-y-3">
+      {!canDrag ? (
+        <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
+          Drag and drop is paused while a label filter is active or cards are grouped by label.
+          Clear the filter and set group-by to &quot;None&quot; to move cards.
+        </p>
+      ) : null}
+      <div className="flex flex-wrap items-end gap-6">
       <div className="space-y-2">
         <Label htmlFor="filter-label">Filter by label</Label>
         <Select
@@ -58,6 +70,7 @@ export function FilterBar() {
           </SelectContent>
         </Select>
       </div>
+    </div>
     </div>
   );
 }

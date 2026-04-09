@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { CardCreateForm, CardEditForm, CardRow, ColumnRow } from "shared";
+import { applyMove, applyReorderInColumn } from "@/lib/board-dnd";
 import {
   DEMO_BOARD_ID,
   demoBoard,
@@ -21,6 +22,13 @@ export interface BoardStoreState {
   addCard: (input: CardCreateForm) => void;
   updateCard: (cardId: string, patch: CardEditForm & { columnId?: string }) => void;
   deleteCard: (cardId: string) => void;
+  /** Aligns with PATCH /api/cards/:id/move — positions renormalized in affected columns. */
+  moveCard: (
+    cardId: string,
+    target: { columnId: string; position: number },
+  ) => void;
+  /** Aligns with PATCH /api/columns/:id/reorder — `orderedCardIds` is full column order. */
+  reorderInColumn: (columnId: string, orderedCardIds: string[]) => void;
 }
 
 function nextPositionInColumn(cards: CardRow[], columnId: string): number {
@@ -98,7 +106,27 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
       };
     });
   },
+
+  moveCard: (cardId, target) => {
+    set((s) => ({
+      cards: applyMove(s.cards, cardId, target.columnId, target.position),
+    }));
+  },
+
+  reorderInColumn: (columnId, orderedCardIds) => {
+    set((s) => ({
+      cards: applyReorderInColumn(s.cards, columnId, orderedCardIds),
+    }));
+  },
 }));
+
+/** Drag-and-drop is only enabled with no label filter and group-by off (see Phase 5 plan). */
+export function getCanDrag(state: {
+  labelFilter: string;
+  groupBy: GroupByMode;
+}): boolean {
+  return state.labelFilter === "" && state.groupBy === "none";
+}
 
 export function getDemoBoardMeta() {
   return { board: demoBoard, boardId: DEMO_BOARD_ID };

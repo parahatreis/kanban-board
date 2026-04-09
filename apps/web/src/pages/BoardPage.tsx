@@ -14,7 +14,7 @@ export function BoardPage() {
   }
 
   return (
-    <main className="p-6 flex-1">
+    <main className="flex-1 px-6 py-8 max-w-[1600px] mx-auto w-full">
       <Board />
     </main>
   );

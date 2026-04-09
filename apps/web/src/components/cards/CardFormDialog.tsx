@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   cardCreateFormSchema,
@@ -28,6 +28,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type CreateProps = {
   mode: "create";
@@ -124,7 +134,7 @@ function CreateCardFormInner({
             Add a card to a column. Data stays in the browser (Phase 4 mock).
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <input type="hidden" {...form.register("boardId")} />
           <input type="hidden" {...form.register("columnId")} />
           <div className="space-y-2">
@@ -152,7 +162,7 @@ function CreateCardFormInner({
           </div>
           <div className="space-y-2">
             <Label htmlFor="create-title">Title</Label>
-            <Input id="create-title" {...form.register("title")} />
+            <Input id="create-title" autoFocus {...form.register("title")} />
             {form.formState.errors.title ? (
               <p className="text-sm text-destructive">
                 {form.formState.errors.title.message}
@@ -193,6 +203,7 @@ function EditCardFormInner({
   updateCard: (id: string, patch: CardEditForm) => void;
   deleteCard: (id: string) => void;
 }) {
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const form = useForm<CardEditForm>({
     resolver: zodResolver(cardEditFormSchema),
     defaultValues: {
@@ -216,13 +227,20 @@ function EditCardFormInner({
   });
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          document.getElementById("edit-title")?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Edit card</DialogTitle>
           <DialogDescription>Update title, description, or label.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <div className="space-y-2">
             <Label htmlFor="edit-title">Title</Label>
             <Input id="edit-title" {...form.register("title")} />
@@ -245,10 +263,7 @@ function EditCardFormInner({
               type="button"
               variant="destructive"
               className="mr-auto"
-              onClick={() => {
-                deleteCard(card.id);
-                onOpenChange(false);
-              }}
+              onClick={() => setDeleteConfirmOpen(true)}
             >
               Delete
             </Button>
@@ -257,5 +272,29 @@ function EditCardFormInner({
         </form>
       </DialogContent>
     </Dialog>
+    <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this card?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This removes the card from the board. You can undo only by recreating it.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => {
+              deleteCard(card.id);
+              setDeleteConfirmOpen(false);
+              onOpenChange(false);
+            }}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
