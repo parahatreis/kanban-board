@@ -20,9 +20,6 @@ export function BoardWorkspaceChrome({
           <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
             {boardName}
           </h1>
-          <p className="text-xs text-muted-foreground">
-            Drag cards to move or reorder when filters are clear.
-          </p>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

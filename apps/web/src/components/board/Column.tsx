@@ -20,6 +20,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ColumnRow } from "shared";
+import { filterCardsForColumn } from "@/lib/board-view";
 import { useBoardStore, getCanDrag } from "@/stores/board-store";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/board/Card";
@@ -105,13 +106,10 @@ export function Column({
     opacity: isDragging ? 0.55 : 1,
   };
 
-  const columnCards = useMemo(() => {
-    let list = cards.filter((c) => c.columnId === column.id);
-    if (labelFilter) {
-      list = list.filter((c) => c.label === labelFilter);
-    }
-    return list.sort((a, b) => a.position - b.position);
-  }, [cards, column.id, labelFilter]);
+  const columnCards = useMemo(
+    () => filterCardsForColumn(cards, column.id, labelFilter),
+    [cards, column.id, labelFilter],
+  );
 
   const cardIds = useMemo(
     () => columnCards.map((c) => c.id),

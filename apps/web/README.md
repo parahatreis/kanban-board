@@ -1,5 +1,7 @@
 # Web (React + Vite)
 
+Overview for reviewers: see the **[root README](../README.md)** for monorepo setup, architecture, database, API summary, and trade-offs.
+
 ## Scripts
 
 | Command | Description |
@@ -7,18 +9,18 @@
 | `yarn workspace web dev` | Vite dev server (default port **5173**) |
 | `yarn workspace web build` | `tsc -b` then production bundle |
 | `yarn workspace web preview` | Preview production build |
-| `yarn workspace web test` | Vitest (pure DnD helpers in [`src/lib/board-dnd.test.ts`](src/lib/board-dnd.test.ts)) |
+| `yarn workspace web test` | Vitest — [`src/lib/board-dnd.test.ts`](src/lib/board-dnd.test.ts), [`src/lib/board-view.test.ts`](src/lib/board-view.test.ts) |
 
 ## Stack
 
 - **React 19** + **TypeScript** + **Vite**
 - **Tailwind CSS** + **shadcn/ui** (Radix primitives, `cn()` in [`src/lib/utils.ts`](src/lib/utils.ts))
 - **React Router** — layout route with **Home** (`/`) and **Board** (`/board/:boardId`)
-- **Zustand** ([`src/stores/board-store.ts`](src/stores/board-store.ts)) — loads boards from the API; **`moveCard`** / **`reorderInColumn`** call the Fastify API
+- **Zustand** ([`src/stores/board-store.ts`](src/stores/board-store.ts)) — active board state; mutations call the Fastify API then **merge** responses when safe (see root README)
 - **API client** — [`src/api/`](src/api/) (**axios** instance, `apiFetch`, `listBoards`, `getBoardDetail`, card/column mutations)
-- **React Hook Form** + **Zod** — card create/edit; schemas from **`shared`**
+- **React Hook Form** + **Zod** — card create; edit uses same schemas in the card details dialog; schemas from **`shared`**
 - **@dnd-kit** — drag handle on cards, cross-column move, reorder within column; **`DragOverlay`** preview
-- **Vitest** + **happy-dom** — unit tests for [`src/lib/board-dnd.ts`](src/lib/board-dnd.ts) (pure helpers; no HTTP client)
+- **Vitest** + **happy-dom** — pure helpers (`board-dnd`, `board-view`) without HTTP
 
 Path alias: `@/*` → [`src/*`](src).
 
@@ -37,19 +39,24 @@ The home page lists boards from `GET /api/boards`. A board page loads `GET /api/
 
 - **Home (`/`)** — boards appear as a **responsive grid of large cards** (not a table); each links to `/board/:id`.
 - **Sidebar** — under **Boards**, every board from the API is listed for quick navigation; collapsed desktop mode shows initials with `title` tooltips.
-- **Card details** — clicking a card opens a **dialog** with full plain-text description, **label chip**, threaded **comments** (`GET`/`POST` `/api/cards/:id/comments`), and **Edit card** (opens the existing edit form). Markdown rendering is intentionally out of scope.
-- **Toolbar search** — debounced query drives `GET /api/boards/:boardId?search=…` via `boardSearchQuery` in the board store (label filter remains client-side).
+- **Card details** — clicking a card opens a **dialog** with editable title/description, label, assignee, **comments** (`GET`/`POST` `/api/cards/:id/comments`), save, and delete. Markdown rendering is intentionally out of scope.
+- **Toolbar search** — debounced query drives `GET /api/boards/:boardId?search=…` via `boardSearchQuery` in the board store (label filter stays client-side on the loaded card set).
 - **Mobile** — horizontal column strip uses **smooth scrolling**; search field uses a **taller touch target** on small screens. Further virtualization for huge columns is deferred (see API README).
 
 Shared boards directory state: [`src/stores/boards-directory-store.ts`](src/stores/boards-directory-store.ts).
 
-## Phase 5 — DnD and polish (still applies)
+## Filters and DnD
 
-- **Drag** is enabled only when **no label filter** is active and **group-by** is **None**. Otherwise a hint appears in the filter bar.
-- **Grouping by label** uses static lists (drag disabled) to avoid multi-list DnD complexity.
-- **Delete** uses a confirmation **AlertDialog**; edit dialog focuses the title field on open.
+- **Filter by label** — dropdown limits visible cards to one label (exact match).
+- **Drag-and-drop** is enabled only when **no label filter** is active; otherwise a hint appears in the filter bar.
+
+Pure helper for filtered column card lists: [`src/lib/board-view.ts`](src/lib/board-view.ts).
+
+## Phase 5 — polish
+
+- **Delete** uses a confirmation **AlertDialog** where applicable.
 - **UI polish** takes layout/spacing cues from [Ravenna](https://ravenna.ai/) marketing pages (inspiration only—no brand assets): calmer shell, panel-like columns, lifted drag overlay.
 
 ## State shape (rationale)
 
-The store keeps a flat `cards` array plus `columns` for the active board, with **label filter** and **group-by** driving presentation. **`moveCard`** and **`reorderInColumn`** call the API, then refetch the board so positions match the server.
+The store keeps a flat `cards` array plus `columns` for the active board. **`labelFilter`** and **`boardSearchQuery`** drive what appears and how columns are laid out. After most mutations, the store **merges** API responses; **silent `loadBoard`** runs when server-side search is active or after **`moveCard`** so sibling positions stay consistent with the server.
