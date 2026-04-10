@@ -1,34 +1,31 @@
 import { create } from "zustand";
 import type { BoardRow, CardCreateForm, CardEditForm, CardRow, ColumnRow } from "shared";
-import { applyMove, applyReorderInColumn } from "@/lib/board-dnd";
-import {
-  DEMO_BOARD_ID,
-  demoBoard,
-  demoCards,
-  demoColumns,
-} from "@/mocks/demo-board";
-import { getBoardDataset } from "@/mocks/board-datasets";
+import { getBoardDetail } from "@/api/boards";
+import { ApiError } from "@/api/client";
+import * as cardsApi from "@/api/cards";
+
+export type BoardLoadStatus = "idle" | "loading" | "ready" | "not_found" | "error";
 
 export interface BoardStoreState {
-  board: BoardRow;
+  board: BoardRow | null;
   boardId: string;
   columns: ColumnRow[];
   cards: CardRow[];
   /** Empty string = show all labels */
   labelFilter: string;
+  loadStatus: BoardLoadStatus;
+  loadError: string | null;
+
   setLabelFilter: (value: string) => void;
-  addCard: (input: CardCreateForm) => void;
-  updateCard: (cardId: string, patch: CardEditForm & { columnId?: string }) => void;
-  deleteCard: (cardId: string) => void;
-  /** Aligns with PATCH /api/cards/:id/move — positions renormalized in affected columns. */
+  loadBoard: (boardId: string, options?: { silent?: boolean }) => Promise<void>;
+  addCard: (input: CardCreateForm) => Promise<void>;
+  updateCard: (cardId: string, patch: CardEditForm & { columnId?: string }) => Promise<void>;
+  deleteCard: (cardId: string) => Promise<void>;
   moveCard: (
     cardId: string,
     target: { columnId: string; position: number },
-  ) => void;
-  /** Aligns with PATCH /api/columns/:id/reorder — `orderedCardIds` is full column order. */
-  reorderInColumn: (columnId: string, orderedCardIds: string[]) => void;
-  /** Replace columns/cards from mock data for the given board (client-side only). */
-  loadBoard: (boardId: string) => boolean;
+  ) => Promise<void>;
+  reorderInColumn: (columnId: string, orderedCardIds: string[]) => Promise<void>;
 }
 
 function nextPositionInColumn(cards: CardRow[], columnId: string): number {
@@ -37,97 +34,106 @@ function nextPositionInColumn(cards: CardRow[], columnId: string): number {
   return Math.max(...inCol.map((c) => c.position)) + 1;
 }
 
-function renormalizePositions(
-  cards: CardRow[],
-  columnId: string,
-): CardRow[] {
-  const inCol = cards
-    .filter((c) => c.columnId === columnId)
-    .sort((a, b) => a.position - b.position);
-  const idToPos = new Map(
-    inCol.map((c, i) => [c.id, i] as const),
-  );
-  return cards.map((c) =>
-    c.columnId === columnId && idToPos.has(c.id)
-      ? { ...c, position: idToPos.get(c.id)! }
-      : c,
-  );
-}
-
 export const useBoardStore = create<BoardStoreState>((set, get) => ({
-  board: demoBoard,
-  boardId: DEMO_BOARD_ID,
-  columns: [...demoColumns].sort((a, b) => a.position - b.position),
-  cards: [...demoCards],
+  board: null,
+  boardId: "",
+  columns: [],
+  cards: [],
   labelFilter: "",
-
-  loadBoard: (boardId) => {
-    const data = getBoardDataset(boardId);
-    if (!data) return false;
-    set({
-      board: data.board,
-      boardId: data.board.id,
-      columns: [...data.columns].sort((a, b) => a.position - b.position),
-      cards: [...data.cards],
-      labelFilter: "",
-    });
-    return true;
-  },
+  loadStatus: "idle",
+  loadError: null,
 
   setLabelFilter: (labelFilter) => set({ labelFilter }),
 
-  addCard: (input) => {
-    const { cards } = get();
+  loadBoard: async (boardId, options) => {
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      set({
+        boardId,
+        loadStatus: "loading",
+        loadError: null,
+        board: null,
+        columns: [],
+        cards: [],
+        labelFilter: "",
+      });
+    }
+    try {
+      const data = await getBoardDetail(boardId);
+      set({
+        board: data.board,
+        boardId: data.board.id,
+        columns: [...data.columns].sort((a, b) => a.position - b.position),
+        cards: data.cards,
+        loadStatus: "ready",
+        loadError: null,
+      });
+    } catch (e) {
+      if (!silent) {
+        if (e instanceof ApiError && e.status === 404) {
+          set({
+            loadStatus: "not_found",
+            loadError: null,
+            board: null,
+            columns: [],
+            cards: [],
+          });
+        } else {
+          const msg = e instanceof Error ? e.message : "Failed to load board";
+          set({
+            loadStatus: "error",
+            loadError: msg,
+            board: null,
+            columns: [],
+            cards: [],
+          });
+        }
+      }
+      throw e;
+    }
+  },
+
+  addCard: async (input) => {
+    const boardId = get().boardId;
+    const cards = get().cards;
     const position = nextPositionInColumn(cards, input.columnId);
-    const newCard: CardRow = {
-      id: crypto.randomUUID(),
+    await cardsApi.createCard({
       boardId: input.boardId,
       columnId: input.columnId,
       title: input.title,
-      description: input.description ?? "",
+      description: input.description,
       position,
-      label: input.label ?? "",
-    };
-    set((s) => ({ cards: [...s.cards, newCard] }));
-  },
-
-  updateCard: (cardId, patch) => {
-    set((s) => ({
-      cards: s.cards.map((c) =>
-        c.id === cardId
-          ? {
-              ...c,
-              title: patch.title ?? c.title,
-              description:
-                patch.description !== undefined ? patch.description : c.description,
-              label: patch.label !== undefined ? patch.label : c.label,
-            }
-          : c,
-      ),
-    }));
-  },
-
-  deleteCard: (cardId) => {
-    set((s) => {
-      const removed = s.cards.find((c) => c.id === cardId);
-      if (!removed) return s;
-      const cards = s.cards.filter((c) => c.id !== cardId);
-      return {
-        cards: renormalizePositions(cards, removed.columnId),
-      };
+      label: input.label,
     });
+    await get().loadBoard(boardId, { silent: true });
   },
 
-  moveCard: (cardId, target) => {
-    set((s) => ({
-      cards: applyMove(s.cards, cardId, target.columnId, target.position),
-    }));
+  updateCard: async (cardId, patch) => {
+    const boardId = get().boardId;
+    await cardsApi.patchCard(cardId, {
+      title: patch.title,
+      description: patch.description,
+      label: patch.label,
+    });
+    await get().loadBoard(boardId, { silent: true });
   },
 
-  reorderInColumn: (columnId, orderedCardIds) => {
-    set((s) => ({
-      cards: applyReorderInColumn(s.cards, columnId, orderedCardIds),
-    }));
+  deleteCard: async (cardId) => {
+    const boardId = get().boardId;
+    await cardsApi.deleteCard(cardId);
+    await get().loadBoard(boardId, { silent: true });
+  },
+
+  moveCard: async (cardId, target) => {
+    const boardId = get().boardId;
+    await cardsApi.moveCard(cardId, target);
+    await get().loadBoard(boardId, { silent: true });
+  },
+
+  reorderInColumn: async (columnId, orderedCardIds) => {
+    const boardId = get().boardId;
+    await cardsApi.reorderColumn(columnId, orderedCardIds);
+    await get().loadBoard(boardId, { silent: true });
   },
 }));
 
@@ -135,4 +141,3 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
 export function getCanDrag(state: { labelFilter: string }): boolean {
   return state.labelFilter === "";
 }
-

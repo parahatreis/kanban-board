@@ -1,4 +1,3 @@
-import { Filter } from "lucide-react";
 import { useMemo } from "react";
 import { useBoardStore, getCanDrag } from "@/stores/board-store";
 import {

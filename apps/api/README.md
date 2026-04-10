@@ -59,7 +59,7 @@ The Drizzle schema includes **`users`** (unique `email`, optional `display_name`
 3. Apply migrations: `yarn workspace api db:migrate`
 4. Optional: `yarn workspace api db:studio` to inspect the database.
 
-After migrations, seed persistent **demo** data (user `demo@kanban.local`, board “Demo board”, sample columns and cards). Safe to run twice: it skips if that board already exists.
+After migrations, seed persistent **demo** data (user `demo@kanban.local`, boards “Demo board” and “Second board” with sample columns/cards). Safe to run twice: it only creates boards that are missing by name.
 
 ```bash
 yarn workspace api db:seed

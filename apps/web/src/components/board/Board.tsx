@@ -12,6 +12,7 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 import { Search } from "lucide-react";
 import { useState } from "react";
+import { ApiError } from "@/api/client";
 import { useBoardStore, getCanDrag } from "@/stores/board-store";
 import { CardFormDialog } from "@/components/cards/CardFormDialog";
 import { FilterBar } from "@/components/filters/FilterBar";
@@ -30,6 +31,8 @@ export function Board() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createColumnId, setCreateColumnId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [dndError, setDndError] = useState<string | null>(null);
+  const loadBoard = useBoardStore((s) => s.loadBoard);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -58,53 +61,76 @@ export function Board() {
     const activeCard = state.cards.find((c) => c.id === activeIdStr);
     if (!activeCard) return;
 
-    if (overIdStr.startsWith("col-")) {
-      const targetColumnId = overIdStr.slice(4);
-      const targetCards = state.cards
-        .filter((c) => c.columnId === targetColumnId && c.id !== activeIdStr)
-        .sort((a, b) => a.position - b.position);
-      const targetIndex = targetCards.length;
+    void (async () => {
+      try {
+        if (overIdStr.startsWith("col-")) {
+          const targetColumnId = overIdStr.slice(4);
+          const targetCards = state.cards
+            .filter((c) => c.columnId === targetColumnId && c.id !== activeIdStr)
+            .sort((a, b) => a.position - b.position);
+          const targetIndex = targetCards.length;
 
-      if (activeCard.columnId === targetColumnId) {
-        const ids = state.cards
-          .filter((c) => c.columnId === targetColumnId)
-          .sort((a, b) => a.position - b.position)
-          .map((c) => c.id);
-        const oldIndex = ids.indexOf(activeIdStr);
-        const newIndex = ids.length - 1;
-        if (oldIndex !== -1 && oldIndex !== newIndex) {
-          reorderInColumn(targetColumnId, arrayMove(ids, oldIndex, newIndex));
+          if (activeCard.columnId === targetColumnId) {
+            const ids = state.cards
+              .filter((c) => c.columnId === targetColumnId)
+              .sort((a, b) => a.position - b.position)
+              .map((c) => c.id);
+            const oldIndex = ids.indexOf(activeIdStr);
+            const newIndex = ids.length - 1;
+            if (oldIndex !== -1 && oldIndex !== newIndex) {
+              await reorderInColumn(targetColumnId, arrayMove(ids, oldIndex, newIndex));
+            }
+          } else {
+            await moveCard(activeIdStr, {
+              columnId: targetColumnId,
+              position: targetIndex,
+            });
+          }
+          setDndError(null);
+          return;
         }
-      } else {
-        moveCard(activeIdStr, { columnId: targetColumnId, position: targetIndex });
+
+        const overCard = state.cards.find((c) => c.id === overIdStr);
+        if (!overCard) return;
+
+        if (activeCard.columnId === overCard.columnId) {
+          const colId = activeCard.columnId;
+          const ids = state.cards
+            .filter((c) => c.columnId === colId)
+            .sort((a, b) => a.position - b.position)
+            .map((c) => c.id);
+          const oldIndex = ids.indexOf(activeIdStr);
+          const newIndex = ids.indexOf(overIdStr);
+          if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+          await reorderInColumn(colId, arrayMove(ids, oldIndex, newIndex));
+          setDndError(null);
+          return;
+        }
+
+        const targetCards = state.cards
+          .filter((c) => c.columnId === overCard.columnId && c.id !== activeIdStr)
+          .sort((a, b) => a.position - b.position);
+        const targetIndex = targetCards.findIndex((c) => c.id === overIdStr);
+        await moveCard(activeIdStr, {
+          columnId: overCard.columnId,
+          position: Math.max(0, targetIndex),
+        });
+        setDndError(null);
+      } catch (e) {
+        const msg =
+          e instanceof ApiError
+            ? e.message
+            : e instanceof Error
+              ? e.message
+              : "Could not update the board.";
+        setDndError(msg);
+        try {
+          await loadBoard(boardId, { silent: true });
+        } catch {
+          /* ignore */
+        }
       }
-      return;
-    }
-
-    const overCard = state.cards.find((c) => c.id === overIdStr);
-    if (!overCard) return;
-
-    if (activeCard.columnId === overCard.columnId) {
-      const colId = activeCard.columnId;
-      const ids = state.cards
-        .filter((c) => c.columnId === colId)
-        .sort((a, b) => a.position - b.position)
-        .map((c) => c.id);
-      const oldIndex = ids.indexOf(activeIdStr);
-      const newIndex = ids.indexOf(overIdStr);
-      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
-      reorderInColumn(colId, arrayMove(ids, oldIndex, newIndex));
-      return;
-    }
-
-    const targetCards = state.cards
-      .filter((c) => c.columnId === overCard.columnId && c.id !== activeIdStr)
-      .sort((a, b) => a.position - b.position);
-    const targetIndex = targetCards.findIndex((c) => c.id === overIdStr);
-    moveCard(activeIdStr, {
-      columnId: overCard.columnId,
-      position: Math.max(0, targetIndex),
-    });
+    })();
   };
 
   const handleDragCancel = () => {
@@ -112,6 +138,10 @@ export function Board() {
   };
 
   const activeCard = activeId ? cards.find((c) => c.id === activeId) : null;
+
+  if (!board) {
+    return null;
+  }
 
   function openCreate(columnId?: string) {
     setCreateColumnId(columnId ?? null);
@@ -151,6 +181,11 @@ export function Board() {
               Columns
             </h2>
           </div>
+          {dndError ? (
+            <p className="mb-2 text-xs text-destructive" role="alert">
+              {dndError}
+            </p>
+          ) : null}
           <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-4 overflow-x-auto overflow-y-hidden pb-2 pt-1 [scrollbar-gutter:stable]">
             {columns.map((col) => (
               <Column

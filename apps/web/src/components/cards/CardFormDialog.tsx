@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { ApiError } from "@/api/client";
 import {
   cardCreateFormSchema,
   cardEditFormSchema,
@@ -100,8 +101,10 @@ function CreateCardFormInner({
   onOpenChange: (open: boolean) => void;
   defaultColumnId?: string;
   columns: { id: string; title: string }[];
-  addCard: (input: CardCreateForm) => void;
+  addCard: (input: CardCreateForm) => Promise<void>;
 }) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   const form = useForm<CardCreateForm>({
     resolver: zodResolver(cardCreateFormSchema),
     defaultValues: {
@@ -123,16 +126,30 @@ function CreateCardFormInner({
     if (preferred) form.setValue("columnId", preferred);
   }, [boardId, columns, defaultColumnId, form]);
 
-  const onSubmit = form.handleSubmit((data) => {
-    addCard(data);
-    onOpenChange(false);
-    form.reset({
-      boardId,
-      columnId: columns[0]?.id ?? "",
-      title: "",
-      description: "",
-      label: "",
-    });
+  const onSubmit = form.handleSubmit(async (data) => {
+    setSubmitError(null);
+    setPending(true);
+    try {
+      await addCard(data);
+      onOpenChange(false);
+      form.reset({
+        boardId,
+        columnId: columns[0]?.id ?? "",
+        title: "",
+        description: "",
+        label: "",
+      });
+    } catch (e) {
+      const msg =
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Could not create card.";
+      setSubmitError(msg);
+    } finally {
+      setPending(false);
+    }
   });
 
   return (
@@ -140,9 +157,7 @@ function CreateCardFormInner({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>New card</DialogTitle>
-          <DialogDescription>
-            Add a card to a column. Data stays in the browser (Phase 4 mock).
-          </DialogDescription>
+          <DialogDescription>Add a card to a column. Changes are saved to the API.</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <input type="hidden" {...form.register("boardId")} />
@@ -191,8 +206,15 @@ function CreateCardFormInner({
               {...form.register("label")}
             />
           </div>
+          {submitError ? (
+            <p className="text-sm text-destructive" role="alert">
+              {submitError}
+            </p>
+          ) : null}
           <DialogFooter>
-            <Button type="submit">Create</Button>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Creating…" : "Create"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -210,10 +232,14 @@ function EditCardFormInner({
   card: CardRow;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  updateCard: (id: string, patch: CardEditForm) => void;
-  deleteCard: (id: string) => void;
+  updateCard: (id: string, patch: CardEditForm) => Promise<void>;
+  deleteCard: (id: string) => Promise<void>;
 }) {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
   const form = useForm<CardEditForm>({
     resolver: zodResolver(cardEditFormSchema),
     defaultValues: {
@@ -231,9 +257,23 @@ function EditCardFormInner({
     });
   }, [card, form]);
 
-  const onSubmit = form.handleSubmit((data) => {
-    updateCard(card.id, data);
-    onOpenChange(false);
+  const onSubmit = form.handleSubmit(async (data) => {
+    setSubmitError(null);
+    setPending(true);
+    try {
+      await updateCard(card.id, data);
+      onOpenChange(false);
+    } catch (e) {
+      const msg =
+        e instanceof ApiError
+          ? e.message
+          : e instanceof Error
+            ? e.message
+            : "Could not save card.";
+      setSubmitError(msg);
+    } finally {
+      setPending(false);
+    }
   });
 
   return (
@@ -268,16 +308,26 @@ function EditCardFormInner({
             <Label htmlFor="edit-label">Label</Label>
             <Input id="edit-label" {...form.register("label")} />
           </div>
+          {submitError ? (
+            <p className="text-sm text-destructive" role="alert">
+              {submitError}
+            </p>
+          ) : null}
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="destructive"
               className="mr-auto"
-              onClick={() => setDeleteConfirmOpen(true)}
+              onClick={() => {
+                setDeleteError(null);
+                setDeleteConfirmOpen(true);
+              }}
             >
               Delete
             </Button>
-            <Button type="submit">Save</Button>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Saving…" : "Save"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -288,19 +338,40 @@ function EditCardFormInner({
           <AlertDialogTitle>Delete this card?</AlertDialogTitle>
           <AlertDialogDescription>
             This removes the card from the board. You can undo only by recreating it.
+            {deleteError ? (
+              <span className="mt-2 block text-destructive">{deleteError}</span>
+            ) : null}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={() => {
-              deleteCard(card.id);
-              setDeleteConfirmOpen(false);
-              onOpenChange(false);
+            disabled={deletePending}
+            onClick={(e) => {
+              e.preventDefault();
+              void (async () => {
+                setDeleteError(null);
+                setDeletePending(true);
+                try {
+                  await deleteCard(card.id);
+                  setDeleteConfirmOpen(false);
+                  onOpenChange(false);
+                } catch (err) {
+                  const msg =
+                    err instanceof ApiError
+                      ? err.message
+                      : err instanceof Error
+                        ? err.message
+                        : "Could not delete card.";
+                  setDeleteError(msg);
+                } finally {
+                  setDeletePending(false);
+                }
+              })();
             }}
           >
-            Delete
+            {deletePending ? "Deleting…" : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

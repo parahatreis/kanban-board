@@ -2,7 +2,7 @@
  * Seeds persistent mock data for local development (no HTTP).
  * Run after: db:generate + db:migrate, with DATABASE_URL set.
  *
- * Idempotent: if a board named "Demo board" already exists for the demo user, exits without duplicating.
+ * Idempotent: skips creating boards that already exist by name for the demo user.
  */
 import { loadMonorepoEnv } from "../lib/load-env.js";
 import {
@@ -18,6 +18,7 @@ import {
 
 const DEMO_EMAIL = "demo@kanban.local";
 const DEMO_BOARD_NAME = "Demo board";
+const SECOND_BOARD_NAME = "Second board";
 
 loadMonorepoEnv();
 
@@ -44,56 +45,90 @@ async function main() {
   }
 
   const boards = await listBoardsByUser(db, user.id);
-  if (boards.some((b) => b.name === DEMO_BOARD_NAME)) {
-    console.log(`seed-db: skipped (already seeded — "${DEMO_BOARD_NAME}" exists)`);
-    await pool.end();
-    return;
+  const hasDemo = boards.some((b) => b.name === DEMO_BOARD_NAME);
+  const hasSecond = boards.some((b) => b.name === SECOND_BOARD_NAME);
+
+  if (!hasDemo) {
+    const board = await insertBoard(db, {
+      userId: user.id,
+      name: DEMO_BOARD_NAME,
+    });
+    if (!board) throw new Error("insertBoard returned nothing");
+
+    const colTodo = await insertColumn(db, {
+      boardId: board.id,
+      title: "Todo",
+      position: 0,
+    });
+    const colDone = await insertColumn(db, {
+      boardId: board.id,
+      title: "Done",
+      position: 1,
+    });
+    if (!colTodo || !colDone) throw new Error("insertColumn returned nothing");
+
+    await insertCard(db, {
+      boardId: board.id,
+      columnId: colTodo.id,
+      title: "Welcome to the board",
+      description: "Drag cards between columns when the UI is wired up.",
+      position: 0,
+      label: "feature",
+    });
+    await insertCard(db, {
+      boardId: board.id,
+      columnId: colTodo.id,
+      title: "Fix login redirect",
+      description: "",
+      position: 1,
+      label: "bug",
+    });
+    await insertCard(db, {
+      boardId: board.id,
+      columnId: colDone.id,
+      title: "Project setup",
+      description: "Monorepo and DB are ready.",
+      position: 0,
+      label: "feature",
+    });
+    console.log(`seed-db: created "${DEMO_BOARD_NAME}"`);
   }
 
-  const board = await insertBoard(db, {
-    userId: user.id,
-    name: DEMO_BOARD_NAME,
-  });
-  if (!board) throw new Error("insertBoard returned nothing");
+  if (!hasSecond) {
+    const board = await insertBoard(db, {
+      userId: user.id,
+      name: SECOND_BOARD_NAME,
+    });
+    if (!board) throw new Error("insertBoard returned nothing");
 
-  const colTodo = await insertColumn(db, {
-    boardId: board.id,
-    title: "Todo",
-    position: 0,
-  });
-  const colDone = await insertColumn(db, {
-    boardId: board.id,
-    title: "Done",
-    position: 1,
-  });
-  if (!colTodo || !colDone) throw new Error("insertColumn returned nothing");
+    const colA = await insertColumn(db, {
+      boardId: board.id,
+      title: "Backlog",
+      position: 0,
+    });
+    const colB = await insertColumn(db, {
+      boardId: board.id,
+      title: "In progress",
+      position: 1,
+    });
+    if (!colA || !colB) throw new Error("insertColumn returned nothing");
 
-  await insertCard(db, {
-    boardId: board.id,
-    columnId: colTodo.id,
-    title: "Welcome to the board",
-    description: "Drag cards between columns when the UI is wired up.",
-    position: 0,
-    label: "feature",
-  });
-  await insertCard(db, {
-    boardId: board.id,
-    columnId: colTodo.id,
-    title: "Fix login redirect",
-    description: "",
-    position: 1,
-    label: "bug",
-  });
-  await insertCard(db, {
-    boardId: board.id,
-    columnId: colDone.id,
-    title: "Project setup",
-    description: "Monorepo and DB are ready.",
-    position: 0,
-    label: "feature",
-  });
+    await insertCard(db, {
+      boardId: board.id,
+      columnId: colA.id,
+      title: "Sample task",
+      description: "Extra board for multi-row testing in the home list.",
+      position: 0,
+      label: "",
+    });
+    console.log(`seed-db: created "${SECOND_BOARD_NAME}"`);
+  }
 
-  console.log("seed-db: ok (demo user, board, columns, and cards created)");
+  if (hasDemo && hasSecond) {
+    console.log("seed-db: skipped (demo boards already exist)");
+  } else {
+    console.log("seed-db: ok");
+  }
   await pool.end();
 }
 
