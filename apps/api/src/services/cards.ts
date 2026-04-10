@@ -108,7 +108,7 @@ export async function updateCard(
 
 export async function deleteCardForUser(db: Database, userId: string, cardId: string) {
   await assertCardOwnedByUser(db, cardId, userId);
-  return dbCards.deleteCard(db, cardId);
+  return dbCards.softDeleteCard(db, cardId);
 }
 
 export async function moveCardForUser(

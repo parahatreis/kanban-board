@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import {
+  boardDetailQuerySchema,
   createColumnBodySchema,
   reorderBoardColumnsBodySchema,
 } from "../schemas/http.js";
@@ -20,10 +21,12 @@ export const boardRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get("/boards/:boardId", async (request) => {
     const params = boardIdParams.parse(request.params);
+    const query = boardDetailQuerySchema.parse(request.query);
     return boardsService.getBoardDetail(
       fastify.db,
       params.boardId,
       fastify.defaultUser.id,
+      query,
     );
   });
 

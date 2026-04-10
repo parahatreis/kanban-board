@@ -33,6 +33,16 @@ Run the **API** and **web** together (from repo root: `yarn dev`, or two termina
 
 The home page lists boards from `GET /api/boards`. A board page loads `GET /api/boards/:boardId` and performs card CRUD and drag actions via the documented card/column routes.
 
+## Phase 7 (optional) — boards discovery, details, search, responsiveness
+
+- **Home (`/`)** — boards appear as a **responsive grid of large cards** (not a table); each links to `/board/:id`.
+- **Sidebar** — under **Boards**, every board from the API is listed for quick navigation; collapsed desktop mode shows initials with `title` tooltips.
+- **Card details** — clicking a card opens a **dialog** with full plain-text description, **label chip**, threaded **comments** (`GET`/`POST` `/api/cards/:id/comments`), and **Edit card** (opens the existing edit form). Markdown rendering is intentionally out of scope.
+- **Toolbar search** — debounced query drives `GET /api/boards/:boardId?search=…` via `boardSearchQuery` in the board store (label filter remains client-side).
+- **Mobile** — horizontal column strip uses **smooth scrolling**; search field uses a **taller touch target** on small screens. Further virtualization for huge columns is deferred (see API README).
+
+Shared boards directory state: [`src/stores/boards-directory-store.ts`](src/stores/boards-directory-store.ts).
+
 ## Phase 5 — DnD and polish (still applies)
 
 - **Drag** is enabled only when **no label filter** is active and **group-by** is **None**. Otherwise a hint appears in the filter bar.

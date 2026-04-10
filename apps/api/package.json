@@ -10,10 +10,12 @@
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
     "db:studio": "drizzle-kit studio --config drizzle.config.ts",
+    "migration:drop": "drizzle-kit drop --config drizzle.config.ts",
     "db:seed": "tsx src/scripts/seed-db.ts",
     "test": "vitest run"
   },
   "dependencies": {
+    "@fastify/rate-limit": "^10.3.0",
     "dotenv": "^17.4.1",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.0.0",

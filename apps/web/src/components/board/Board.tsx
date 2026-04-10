@@ -19,7 +19,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { Plus, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -47,6 +47,43 @@ const addColumnSchema = z.object({
 });
 
 type AddColumnValues = z.infer<typeof addColumnSchema>;
+
+function BoardSearchField() {
+  const boardId = useBoardStore((s) => s.boardId);
+  const boardSearchQuery = useBoardStore((s) => s.boardSearchQuery);
+  const setBoardSearchQuery = useBoardStore((s) => s.setBoardSearchQuery);
+  const [localSearch, setLocalSearch] = useState(boardSearchQuery);
+
+  useEffect(() => {
+    setLocalSearch(boardSearchQuery);
+  }, [boardSearchQuery, boardId]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      if (localSearch !== boardSearchQuery) {
+        setBoardSearchQuery(localSearch);
+      }
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [localSearch, boardSearchQuery, setBoardSearchQuery]);
+
+  return (
+    <div className="relative w-full min-h-11 sm:w-72">
+      <Search
+        className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+        aria-hidden
+      />
+      <input
+        type="search"
+        value={localSearch}
+        onChange={(e) => setLocalSearch(e.target.value)}
+        placeholder="Search tasks…"
+        className="h-11 min-h-11 w-full rounded-lg border border-border/80 bg-background py-2 pl-8 pr-2.5 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 sm:h-9"
+        aria-label="Search tasks by title or description"
+      />
+    </div>
+  );
+}
 
 /**
  * `closestCorners` alone loses empty column drops: nested column sortables + card
@@ -309,18 +346,7 @@ export function Board() {
         <BoardWorkspaceChrome
           boardName={board.name}
           filterSlot={<FilterBar />}
-          searchSlot={
-            <div className="relative w-full sm:w-72">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Search tasks…"
-                className="h-8 w-full rounded-lg border border-border/80 bg-background pl-8 pr-2.5 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
-                aria-label="Search tasks (visual only)"
-                readOnly
-              />
-            </div>
-          }
+          searchSlot={<BoardSearchField />}
           onAddTask={() => openCreate()}
         />
 
@@ -335,7 +361,7 @@ export function Board() {
               {dndError}
             </p>
           ) : null}
-          <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-4 overflow-x-auto overflow-y-hidden pb-2 pt-1 [scrollbar-gutter:stable]">
+          <div className="flex min-h-0 min-w-0 flex-1 items-stretch gap-4 overflow-x-auto overflow-y-hidden scroll-smooth pb-2 pt-1 [scrollbar-gutter:stable]">
             <SortableContext
               items={columnIds}
               strategy={horizontalListSortingStrategy}
@@ -365,7 +391,6 @@ export function Board() {
         </div>
 
         <CardFormDialog
-          mode="create"
           boardId={boardId}
           open={createOpen}
           onOpenChange={(open) => {

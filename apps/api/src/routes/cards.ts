@@ -1,8 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import * as cardsService from "../services/cards.js";
+import * as cardCommentsService from "../services/card-comments.js";
 import {
   createCardBodySchema,
+  createCardCommentBodySchema,
   listCardsQuerySchema,
   moveCardBodySchema,
   patchCardBodySchema,
@@ -41,6 +43,43 @@ export const cardRoutes: FastifyPluginAsync = async (fastify) => {
       params.cardId,
       fastify.defaultUser.id,
     );
+  });
+
+  fastify.get("/cards/:cardId/comments", async (request) => {
+    const params = cardIdParams.parse(request.params);
+    const rows = await cardCommentsService.listCommentsForCardForUser(
+      fastify.db,
+      fastify.defaultUser.id,
+      params.cardId,
+    );
+    return {
+      comments: rows.map((r) => ({
+        id: r.id,
+        cardId: r.cardId,
+        userId: r.userId,
+        body: r.body,
+        createdAt: r.createdAt,
+        author: r.author
+          ? {
+              id: r.author.id,
+              displayName: r.author.displayName,
+              email: r.author.email,
+            }
+          : null,
+      })),
+    };
+  });
+
+  fastify.post("/cards/:cardId/comments", async (request, reply) => {
+    const params = cardIdParams.parse(request.params);
+    const body = createCardCommentBodySchema.parse(request.body);
+    const row = await cardCommentsService.addCommentForCardForUser(
+      fastify.db,
+      fastify.defaultUser.id,
+      params.cardId,
+      body.body,
+    );
+    return reply.status(201).send({ comment: row });
   });
 
   fastify.patch("/cards/:cardId/move", async (request) => {

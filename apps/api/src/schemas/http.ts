@@ -7,6 +7,12 @@ export const listCardsQuerySchema = z.object({
   search: z.string().optional(),
 });
 
+/** Same filters as list cards — for GET /boards/:boardId full detail. */
+export const boardDetailQuerySchema = z.object({
+  label: z.string().optional(),
+  search: z.string().optional(),
+});
+
 export const createCardBodySchema = z.object({
   boardId: z.string().uuid(),
   columnId: z.string().uuid(),
@@ -48,4 +54,8 @@ export const patchColumnBodySchema = z.object({
 
 export const reorderBoardColumnsBodySchema = z.object({
   orderedColumnIds: z.array(z.string().uuid()).min(1),
+});
+
+export const createCardCommentBodySchema = z.object({
+  body: z.string().min(1).max(8000),
 });

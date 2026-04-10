@@ -2,6 +2,7 @@ import type { Database } from "../db/client.js";
 import * as dbBoards from "../db/boards.js";
 import * as dbColumns from "../db/columns.js";
 import * as dbCards from "../db/cards.js";
+import type { CardListFilters } from "../db/cards.js";
 import { HttpError } from "../lib/errors.js";
 
 export async function assertBoardOwnedByUser(
@@ -20,12 +21,17 @@ export async function listBoardsForUser(db: Database, userId: string) {
   return dbBoards.listBoardsByUser(db, userId);
 }
 
-export async function getBoardDetail(db: Database, boardId: string, userId: string) {
+export async function getBoardDetail(
+  db: Database,
+  boardId: string,
+  userId: string,
+  filters: CardListFilters = {},
+) {
   await assertBoardOwnedByUser(db, boardId, userId);
   const [board, columns, cards] = await Promise.all([
     dbBoards.getBoardById(db, boardId),
     dbColumns.listColumnsByBoard(db, boardId),
-    dbCards.listCardsByBoard(db, boardId),
+    dbCards.listCardsByBoard(db, boardId, filters),
   ]);
   return { board: board!, columns, cards };
 }

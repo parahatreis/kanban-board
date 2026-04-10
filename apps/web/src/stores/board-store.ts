@@ -24,11 +24,14 @@ export interface BoardStoreState {
   users: UserRow[];
   /** Empty string = show all labels */
   labelFilter: string;
+  /** Server-side filter on GET /boards/:id (title/description search). */
+  boardSearchQuery: string;
   loadStatus: BoardLoadStatus;
   loadError: string | null;
 
   setLabelFilter: (value: string) => void;
-  loadBoard: (boardId: string, options?: { silent?: boolean }) => Promise<void>;
+  setBoardSearchQuery: (value: string) => void;
+  loadBoard: (boardId: string, options?: { silent?: boolean; search?: string }) => Promise<void>;
   addCard: (input: CardCreateForm) => Promise<void>;
   updateCard: (cardId: string, patch: CardEditForm & { columnId?: string }) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
@@ -56,13 +59,26 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
   cards: [],
   users: [],
   labelFilter: "",
+  boardSearchQuery: "",
   loadStatus: "idle",
   loadError: null,
 
   setLabelFilter: (labelFilter) => set({ labelFilter }),
 
+  setBoardSearchQuery: (boardSearchQuery) => {
+    if (get().boardSearchQuery === boardSearchQuery) return;
+    set({ boardSearchQuery });
+    const boardId = get().boardId;
+    if (boardId && get().loadStatus === "ready") {
+      void get().loadBoard(boardId, { silent: true });
+    }
+  },
+
   loadBoard: async (boardId, options) => {
     const silent = options?.silent ?? false;
+    if (options?.search !== undefined) {
+      set({ boardSearchQuery: options.search });
+    }
     if (!silent) {
       set({
         boardId,
@@ -73,11 +89,13 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
         cards: [],
         users: [],
         labelFilter: "",
+        boardSearchQuery: options?.search ?? "",
       });
     }
     try {
+      const q = get().boardSearchQuery.trim();
       const [data, usersRows] = await Promise.all([
-        getBoardDetail(boardId),
+        getBoardDetail(boardId, { search: q || undefined }),
         listUsers(),
       ]);
       set({

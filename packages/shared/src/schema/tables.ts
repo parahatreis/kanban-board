@@ -85,6 +85,7 @@ export const cards = pgTable(
     assigneeUserId: uuid("assignee_user_id").references(() => users.id, {
       onDelete: "set null",
     }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "date" }),
   },
   (t) => [
     index("cards_board_id_idx").on(t.boardId),
@@ -92,5 +93,29 @@ export const cards = pgTable(
     index("cards_column_position_idx").on(t.columnId, t.position),
     index("cards_board_label_idx").on(t.boardId, t.label),
     index("cards_assignee_user_id_idx").on(t.assigneeUserId),
+    index("cards_deleted_at_idx").on(t.deletedAt),
+  ],
+);
+
+/** Comment on a card (author is a user row for display name). */
+export const cardComments = pgTable(
+  "card_comments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    cardId: uuid("card_id")
+      .notNull()
+      .references(() => cards.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("card_comments_card_id_idx").on(t.cardId),
+    index("card_comments_user_id_idx").on(t.userId),
+    index("card_comments_created_at_idx").on(t.createdAt),
   ],
 );

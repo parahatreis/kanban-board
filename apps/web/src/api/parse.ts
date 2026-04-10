@@ -31,6 +31,7 @@ export function normalizeCard(row: CardRow): CardRow {
     label: row.label ?? "",
     createdAt: parseDate(row.createdAt as unknown),
     assigneeUserId: row.assigneeUserId ?? null,
+    deletedAt: row.deletedAt ? parseDate(row.deletedAt as unknown) : null,
   };
 }
 

@@ -37,4 +37,75 @@ describe.skipIf(!dbUrl)("API integration (Postgres)", () => {
     const body = JSON.parse(res.body) as { boards: unknown[] };
     expect(Array.isArray(body.boards)).toBe(true);
   });
+
+  it("GET /api/boards/:boardId accepts search query", async () => {
+    const list = await app.inject({ method: "GET", url: "/api/boards" });
+    expect(list.statusCode).toBe(200);
+    const { boards } = JSON.parse(list.body) as { boards: { id: string }[] };
+    if (boards.length === 0) return;
+    const boardId = boards[0].id;
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/boards/${boardId}?search=___unlikely___`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body) as { cards: unknown[] };
+    expect(Array.isArray(body.cards)).toBe(true);
+  });
+
+  it("creates card, adds comment, soft-deletes card", async () => {
+    const boardsRes = await app.inject({ method: "GET", url: "/api/boards" });
+    expect(boardsRes.statusCode).toBe(200);
+    const { boards } = JSON.parse(boardsRes.body) as { boards: { id: string }[] };
+    expect(boards.length).toBeGreaterThan(0);
+    const boardId = boards[0].id;
+    const detail = await app.inject({ method: "GET", url: `/api/boards/${boardId}` });
+    expect(detail.statusCode).toBe(200);
+    const parsed = JSON.parse(detail.body) as {
+      columns: { id: string }[];
+      cards: { columnId: string; position: number }[];
+    };
+    expect(parsed.columns.length).toBeGreaterThan(0);
+    const columnId = parsed.columns[0].id;
+    const inCol = parsed.cards.filter((c) => c.columnId === columnId);
+    const nextPos =
+      inCol.length === 0 ? 0 : Math.max(...inCol.map((c) => c.position)) + 1;
+
+    const create = await app.inject({
+      method: "POST",
+      url: "/api/cards",
+      headers: { "content-type": "application/json" },
+      payload: JSON.stringify({
+        boardId,
+        columnId,
+        title: "Integration test card",
+        position: nextPos,
+        description: "integration",
+      }),
+    });
+    expect(create.statusCode).toBe(201);
+    const created = JSON.parse(create.body) as { id: string };
+    const cardId = created.id;
+
+    const postComment = await app.inject({
+      method: "POST",
+      url: `/api/cards/${cardId}/comments`,
+      headers: { "content-type": "application/json" },
+      payload: JSON.stringify({ body: "integration comment" }),
+    });
+    expect(postComment.statusCode).toBe(201);
+
+    const comments = await app.inject({ method: "GET", url: `/api/cards/${cardId}/comments` });
+    expect(comments.statusCode).toBe(200);
+    const body = JSON.parse(comments.body) as { comments: { body: string }[] };
+    expect(body.comments.some((c) => c.body === "integration comment")).toBe(true);
+
+    const del = await app.inject({ method: "DELETE", url: `/api/cards/${cardId}` });
+    expect(del.statusCode).toBe(204);
+
+    const after = await app.inject({ method: "GET", url: `/api/boards/${boardId}` });
+    expect(after.statusCode).toBe(200);
+    const { cards } = JSON.parse(after.body) as { cards: { id: string }[] };
+    expect(cards.some((c) => c.id === cardId)).toBe(false);
+  });
 });

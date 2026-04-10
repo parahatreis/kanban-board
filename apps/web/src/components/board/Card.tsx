@@ -7,7 +7,7 @@ import {
   Card as CardSurface,
   CardContent,
 } from "@/components/ui/card";
-import { CardFormDialog } from "@/components/cards/CardFormDialog";
+import { CardDetailsSheet } from "@/components/cards/CardDetailsSheet";
 import {
   assigneeAvatarGradient,
   initialsFromUser,
@@ -112,7 +112,7 @@ export function Card({
 }
 
 function StaticCard({ card }: { card: CardRow }) {
-  const [editOpen, setEditOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const users = useBoardStore((s) => s.users);
 
   return (
@@ -123,11 +123,11 @@ function StaticCard({ card }: { card: CardRow }) {
           cardShadow,
           "hover:border-border hover:shadow-md hover:bg-muted/20",
         )}
-        onClick={() => setEditOpen(true)}
+        onClick={() => setDetailsOpen(true)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            setEditOpen(true);
+            setDetailsOpen(true);
           }
         }}
         role="button"
@@ -137,18 +137,18 @@ function StaticCard({ card }: { card: CardRow }) {
           <CardPreview card={card} users={users} />
         </CardContent>
       </CardSurface>
-      <CardFormDialog
-        mode="edit"
+      <CardDetailsSheet
         card={card}
-        open={editOpen}
-        onOpenChange={setEditOpen}
+        users={users}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
       />
     </>
   );
 }
 
 function SortableCardInner({ card }: { card: CardRow }) {
-  const [editOpen, setEditOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const users = useBoardStore((s) => s.users);
   const {
     attributes,
@@ -175,12 +175,12 @@ function SortableCardInner({ card }: { card: CardRow }) {
     opacity: isDragging ? 0.45 : 1,
   };
 
-  function openEdit() {
+  function openDetails() {
     if (skipNextClick.current) {
       skipNextClick.current = false;
       return;
     }
-    setEditOpen(true);
+    setDetailsOpen(true);
   }
 
   return (
@@ -196,11 +196,11 @@ function SortableCardInner({ card }: { card: CardRow }) {
         )}
         {...attributes}
         {...listeners}
-        onClick={openEdit}
+        onClick={openDetails}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            setEditOpen(true);
+            setDetailsOpen(true);
           }
         }}
         role="button"
@@ -210,11 +210,11 @@ function SortableCardInner({ card }: { card: CardRow }) {
           <CardPreview card={card} users={users} />
         </CardContent>
       </CardSurface>
-      <CardFormDialog
-        mode="edit"
+      <CardDetailsSheet
         card={card}
-        open={editOpen}
-        onOpenChange={setEditOpen}
+        users={users}
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
       />
     </>
   );

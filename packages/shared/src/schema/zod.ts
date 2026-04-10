@@ -1,6 +1,6 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
-import { boards, cards, columns, users } from "./tables.js";
+import { boards, cardComments, cards, columns, users } from "./tables.js";
 
 export const userSelectSchema = createSelectSchema(users);
 export const userInsertSchema = createInsertSchema(users);
@@ -14,6 +14,9 @@ export const columnInsertSchema = createInsertSchema(columns);
 export const cardSelectSchema = createSelectSchema(cards);
 export const cardInsertSchema = createInsertSchema(cards);
 
+export const cardCommentSelectSchema = createSelectSchema(cardComments);
+export const cardCommentInsertSchema = createInsertSchema(cardComments);
+
 /** Partial updates for cards (e.g. move / reorder). */
 export const cardPatchSchema = cardInsertSchema
   .partial()
@@ -23,6 +26,7 @@ export type UserRow = z.infer<typeof userSelectSchema>;
 export type BoardRow = z.infer<typeof boardSelectSchema>;
 export type ColumnRow = z.infer<typeof columnSelectSchema>;
 export type CardRow = z.infer<typeof cardSelectSchema>;
+export type CardCommentRow = z.infer<typeof cardCommentSelectSchema>;
 
 export type UserInsert = z.infer<typeof userInsertSchema>;
 export type BoardInsert = z.infer<typeof boardInsertSchema>;
@@ -49,3 +53,9 @@ export const cardEditFormSchema = z.object({
 
 export type CardCreateForm = z.infer<typeof cardCreateFormSchema>;
 export type CardEditForm = z.infer<typeof cardEditFormSchema>;
+
+export const cardCommentCreateSchema = z.object({
+  body: z.string().min(1).max(8000),
+});
+
+export type CardCommentCreate = z.infer<typeof cardCommentCreateSchema>;

@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, or, type SQL } from "drizzle-orm";
+import { and, asc, eq, ilike, isNull, or, type SQL } from "drizzle-orm";
 import { cards } from "shared";
 import type { Database } from "./client.js";
 
@@ -27,7 +27,7 @@ export async function insertCard(
 
 export async function getCardById(db: Database, id: string) {
   return db.query.cards.findFirst({
-    where: eq(cards.id, id),
+    where: and(eq(cards.id, id), isNull(cards.deletedAt)),
   });
 }
 
@@ -43,7 +43,7 @@ export async function listCardsByBoard(
   boardId: string,
   filters: CardListFilters = {},
 ) {
-  const parts: SQL[] = [eq(cards.boardId, boardId)];
+  const parts: SQL[] = [eq(cards.boardId, boardId), isNull(cards.deletedAt)];
 
   if (filters.label !== undefined && filters.label !== "") {
     parts.push(eq(cards.label, filters.label));
@@ -64,7 +64,7 @@ export async function listCardsByBoard(
 
 export async function listCardsByColumn(db: Database, columnId: string) {
   return db.query.cards.findMany({
-    where: eq(cards.columnId, columnId),
+    where: and(eq(cards.columnId, columnId), isNull(cards.deletedAt)),
     orderBy: [asc(cards.position)],
   });
 }
@@ -85,7 +85,7 @@ export async function updateCard(
   const [row] = await db
     .update(cards)
     .set(values)
-    .where(eq(cards.id, id))
+    .where(and(eq(cards.id, id), isNull(cards.deletedAt)))
     .returning();
   return row;
 }
@@ -115,11 +115,21 @@ export async function setCardPositionsInColumn(
     await db
       .update(cards)
       .set({ position: i })
-      .where(and(eq(cards.columnId, columnId), eq(cards.id, orderedCardIds[i])));
+      .where(
+        and(
+          eq(cards.columnId, columnId),
+          eq(cards.id, orderedCardIds[i]),
+          isNull(cards.deletedAt),
+        ),
+      );
   }
 }
 
-export async function deleteCard(db: Database, id: string) {
-  const [row] = await db.delete(cards).where(eq(cards.id, id)).returning();
+export async function softDeleteCard(db: Database, id: string) {
+  const [row] = await db
+    .update(cards)
+    .set({ deletedAt: new Date() })
+    .where(and(eq(cards.id, id), isNull(cards.deletedAt)))
+    .returning();
   return row;
 }

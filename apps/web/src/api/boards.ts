@@ -7,15 +7,22 @@ export async function listBoards(): Promise<BoardRow[]> {
   return res.boards.map((b) => normalizeBoard(b));
 }
 
-export async function getBoardDetail(boardId: string): Promise<{
+export async function getBoardDetail(
+  boardId: string,
+  query?: { search?: string; label?: string },
+): Promise<{
   board: BoardRow;
   columns: ColumnRow[];
   cards: CardRow[];
 }> {
+  const params = new URLSearchParams();
+  if (query?.search?.trim()) params.set("search", query.search.trim());
+  if (query?.label?.trim()) params.set("label", query.label.trim());
+  const qs = params.toString();
   const raw = await apiFetch<{
     board: BoardRow;
     columns: ColumnRow[];
     cards: CardRow[];
-  }>(`/api/boards/${boardId}`);
+  }>(`/api/boards/${boardId}${qs ? `?${qs}` : ""}`);
   return normalizeBoardDetail(raw);
 }

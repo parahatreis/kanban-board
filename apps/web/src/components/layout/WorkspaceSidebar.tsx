@@ -1,7 +1,14 @@
 import { ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
+import { useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useBoardsDirectoryStore } from "@/stores/boards-directory-store";
+
+function boardInitial(name: string): string {
+  const t = name.trim();
+  return t.length ? t[0]!.toUpperCase() : "?";
+}
 
 export function WorkspaceSidebar({
   className,
@@ -13,8 +20,21 @@ export function WorkspaceSidebar({
   onToggleCollapsed: () => void;
 }) {
   const location = useLocation();
+  const boards = useBoardsDirectoryStore((s) => s.boards);
+  const loadBoardsDirectory = useBoardsDirectoryStore((s) => s.loadBoardsDirectory);
+
+  useEffect(() => {
+    void loadBoardsDirectory();
+  }, [loadBoardsDirectory]);
 
   const boardsActive = location.pathname === "/";
+
+  const activeBoardId = useMemo(() => {
+    const m = location.pathname.match(/^\/board\/([^/]+)/);
+    return m?.[1] ?? null;
+  }, [location.pathname]);
+
+  const listLoading = boards === null;
 
   return (
     <aside
@@ -60,12 +80,12 @@ export function WorkspaceSidebar({
         </Button>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
+      <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">
         <Link
           to="/"
-          title={collapsed ? "Boards" : undefined}
+          title={collapsed ? "All boards" : undefined}
           className={cn(
-            "flex items-center gap-2.5 rounded-lg py-2 text-xs font-medium transition-colors",
+            "flex shrink-0 items-center gap-2.5 rounded-lg py-2 text-xs font-medium transition-colors",
             collapsed ? "md:justify-center md:px-0" : "px-2.5",
             boardsActive
               ? "bg-background text-foreground shadow-sm"
@@ -75,6 +95,72 @@ export function WorkspaceSidebar({
           <LayoutGrid className="size-4 shrink-0 opacity-90" strokeWidth={1.75} />
           <span className={cn(collapsed ? "md:hidden" : "")}>Boards</span>
         </Link>
+
+        <div
+          className={cn(
+            "mt-1 border-t border-border/50 pt-2",
+            collapsed ? "min-h-0 flex-1 md:overflow-y-auto" : "",
+          )}
+        >
+          {listLoading ? (
+            <p
+              className={cn(
+                "px-2 py-1 text-[10px] text-muted-foreground",
+                collapsed ? "md:hidden" : "",
+              )}
+            >
+              Loading…
+            </p>
+          ) : boards.length === 0 ? (
+            <p
+              className={cn(
+                "px-2 py-1 text-[10px] text-muted-foreground",
+                collapsed ? "md:hidden" : "",
+              )}
+            >
+              No boards
+            </p>
+          ) : (
+            <ul className="space-y-0.5">
+              {boards.map((b) => {
+                const isActive = activeBoardId === b.id;
+                return (
+                  <li key={b.id}>
+                    <Link
+                      to={`/board/${b.id}`}
+                      title={collapsed ? b.name : undefined}
+                      className={cn(
+                        "flex items-center gap-2 rounded-md py-1.5 text-xs font-medium transition-colors",
+                        collapsed ? "md:justify-center md:px-0 md:py-2" : "px-2",
+                        isActive
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex size-7 shrink-0 items-center justify-center rounded-md bg-muted/50 text-[10px] font-semibold text-foreground",
+                          collapsed ? "hidden md:flex" : "hidden",
+                        )}
+                        aria-hidden
+                      >
+                        {boardInitial(b.name)}
+                      </span>
+                      <span
+                        className={cn(
+                          "min-w-0 flex-1 truncate",
+                          collapsed ? "md:sr-only" : "",
+                        )}
+                      >
+                        {b.name}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </nav>
     </aside>
   );
