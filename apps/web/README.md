@@ -47,10 +47,11 @@ Shared boards directory state: [`src/stores/boards-directory-store.ts`](src/stor
 
 ## Filters and DnD
 
-- **Filter by label** — dropdown limits visible cards to one label (exact match).
-- **Drag-and-drop** is enabled only when **no label filter** is active; otherwise a hint appears in the filter bar.
+- **Filter by label** — dropdown limits visible cards to one label (exact match); other cards are hidden.
+- **Group by label** — optional second control; keeps the same filtered set but **reorganizes** each column into labeled sections (alphabetical; **No label** last). This is layout grouping, not an additional filter.
+- **Drag-and-drop** is enabled only when **no label filter** and **no label grouping**; otherwise a hint appears in the filter bar.
 
-Pure helper for filtered column card lists: [`src/lib/board-view.ts`](src/lib/board-view.ts).
+Helpers: [`src/lib/board-view.ts`](src/lib/board-view.ts) (`filterCardsForColumn`, `groupCardsByLabelForColumn`).
 
 ## Phase 5 — polish
 
@@ -59,4 +60,4 @@ Pure helper for filtered column card lists: [`src/lib/board-view.ts`](src/lib/bo
 
 ## State shape (rationale)
 
-The store keeps a flat `cards` array plus `columns` for the active board. **`labelFilter`** and **`boardSearchQuery`** drive what appears and how columns are laid out. After most mutations, the store **merges** API responses; **silent `loadBoard`** runs when server-side search is active or after **`moveCard`** so sibling positions stay consistent with the server.
+The store keeps a flat `cards` array plus `columns` for the active board. **`labelFilter`**, **`groupBy`**, and **`boardSearchQuery`** drive what appears and how columns are laid out. **`groupBy`** resets to `none` on a full (non-silent) board load and on load errors. After most mutations, the store **merges** API responses; **silent `loadBoard`** runs when server-side search is active or after **`moveCard`** so sibling positions stay consistent with the server.

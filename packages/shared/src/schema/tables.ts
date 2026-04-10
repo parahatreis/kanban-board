@@ -63,7 +63,7 @@ export const columns = pgTable(
 
 /**
  * Card in a column. `boardId` is denormalized for board-scoped queries (filter/group).
- * `label` supports filter-by-attribute in the UI.
+ * `label` supports filter-by-label and group-by-label sections in the UI.
  */
 export const cards = pgTable(
   "cards",

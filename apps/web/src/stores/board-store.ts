@@ -16,6 +16,8 @@ import * as columnsApi from "@/api/columns";
 
 export type BoardLoadStatus = "idle" | "loading" | "ready" | "not_found" | "error";
 
+export type GroupByMode = "none" | "label";
+
 export interface BoardStoreState {
   board: BoardRow | null;
   boardId: string;
@@ -25,12 +27,15 @@ export interface BoardStoreState {
   users: UserRow[];
   /** Empty string = show all labels */
   labelFilter: string;
+  /** When `label`, each column shows cards in sections by label (layout reorganizes). */
+  groupBy: GroupByMode;
   /** Server-side filter on GET /boards/:id (title/description search). */
   boardSearchQuery: string;
   loadStatus: BoardLoadStatus;
   loadError: string | null;
 
   setLabelFilter: (value: string) => void;
+  setGroupBy: (mode: GroupByMode) => void;
   setBoardSearchQuery: (value: string) => void;
   loadBoard: (boardId: string, options?: { silent?: boolean; search?: string }) => Promise<void>;
   addCard: (input: CardCreateForm) => Promise<void>;
@@ -135,11 +140,14 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
   cards: [],
   users: [],
   labelFilter: "",
+  groupBy: "none",
   boardSearchQuery: "",
   loadStatus: "idle",
   loadError: null,
 
   setLabelFilter: (labelFilter) => set({ labelFilter }),
+
+  setGroupBy: (groupBy) => set({ groupBy }),
 
   setBoardSearchQuery: (boardSearchQuery) => {
     if (get().boardSearchQuery === boardSearchQuery) return;
@@ -167,6 +175,7 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
         cards: [],
         users: [],
         labelFilter: "",
+        groupBy: "none",
         boardSearchQuery: options?.search ?? "",
       });
     }
@@ -198,6 +207,8 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
             columns: [],
             cards: [],
             users: [],
+            labelFilter: "",
+            groupBy: "none",
           });
         } else {
           const msg = e instanceof Error ? e.message : "Failed to load board";
@@ -208,6 +219,8 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
             columns: [],
             cards: [],
             users: [],
+            labelFilter: "",
+            groupBy: "none",
           });
         }
       }
@@ -341,7 +354,7 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
   },
 }));
 
-/** Drag-and-drop is only enabled when no label filter is active. */
-export function getCanDrag(state: { labelFilter: string }): boolean {
-  return state.labelFilter === "";
+/** DnD off when filtering or grouping by label (avoids partial lists / multi-section DnD). */
+export function getCanDrag(state: { labelFilter: string; groupBy: GroupByMode }): boolean {
+  return state.labelFilter === "" && state.groupBy === "none";
 }

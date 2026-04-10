@@ -54,7 +54,7 @@ For script-level detail (build, tests, DB studio), use the app READMEs below.
 
 **Zustand** is used for:
 
-- **`board-store`** — active board: `columns`, `cards`, toolbar **label filter**, debounced **search** query, assignee **users** list. Mutations call the API, then **merge** returned rows into state when possible; **full silent reload** is used when server-side search is active or after **cross-column move** so positions stay consistent.
+- **`board-store`** — active board: `columns`, `cards`, toolbar **label filter**, optional **group by label** (section layout), debounced **search** query, assignee **users** list. Mutations call the API, then **merge** returned rows into state when possible; **full silent reload** is used when server-side search is active or after **cross-column move** so positions stay consistent.
 - **`boards-directory-store`** — list of boards for home + sidebar.
 
 Zustand keeps server state in plain objects, avoids Redux boilerplate for this scope, and works cleanly with React hooks and `@dnd-kit`.
@@ -81,7 +81,7 @@ Full route table and examples: [apps/api/README.md](apps/api/README.md#http-api)
 
 ## Trade-offs & future work
 
-- **DnD off** when a label filter is active — avoids reordering a partially visible list; acceptable for a small take-home scope.
+- **DnD off** when a label filter or label grouping is active — avoids reordering a partially visible list or ambiguous multi-section drag targets; acceptable for a small take-home scope.
 - **Large boards** — full-board payloads; virtualization or pagination would be next steps.
 - **Auth** — single default user by design (challenge assumption).
 

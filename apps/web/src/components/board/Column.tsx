@@ -20,7 +20,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ColumnRow } from "shared";
-import { filterCardsForColumn } from "@/lib/board-view";
+import { filterCardsForColumn, groupCardsByLabelForColumn } from "@/lib/board-view";
 import { useBoardStore, getCanDrag } from "@/stores/board-store";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/board/Card";
@@ -68,6 +68,7 @@ export function Column({
   const cards = useBoardStore((s) => s.cards);
   const columns = useBoardStore((s) => s.columns);
   const labelFilter = useBoardStore((s) => s.labelFilter);
+  const groupBy = useBoardStore((s) => s.groupBy);
   const canDrag = useBoardStore((s) => getCanDrag(s));
   const updateColumn = useBoardStore((s) => s.updateColumn);
   const deleteColumn = useBoardStore((s) => s.deleteColumn);
@@ -108,6 +109,11 @@ export function Column({
 
   const columnCards = useMemo(
     () => filterCardsForColumn(cards, column.id, labelFilter),
+    [cards, column.id, labelFilter],
+  );
+
+  const labelGroups = useMemo(
+    () => groupCardsByLabelForColumn(cards, column.id, labelFilter),
     [cards, column.id, labelFilter],
   );
 
@@ -249,33 +255,51 @@ export function Column({
       >
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-2 py-2">
           <div className="flex min-h-[120px] flex-col gap-2">
-            {canDrag
-              ? (
-                columnCards.length === 0
-                  ? (
-                    <div
-                      className="flex min-h-[120px] w-full items-center justify-center px-2 text-center text-[11px] text-muted-foreground"
-                      aria-hidden
-                    >
-                      Drop tasks here
-                    </div>
-                  )
-                  : (
-                    <SortableContext
-                      items={cardIds}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {columnCards.map((card) => (
-                        <Card key={card.id} card={card} dragDisabled={false} />
+            {groupBy === "label" ? (
+              labelGroups.length === 0 ? (
+                <div
+                  className="flex min-h-[120px] w-full items-center justify-center px-2 text-center text-[11px] text-muted-foreground"
+                  aria-hidden
+                >
+                  No tasks in this column
+                </div>
+              ) : (
+                labelGroups.map((g) => (
+                  <div key={g.labelKey} className="flex flex-col gap-1.5">
+                    <h3 className="px-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {g.displayLabel}
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      {g.cards.map((card) => (
+                        <Card key={card.id} card={card} dragDisabled />
                       ))}
-                    </SortableContext>
-                  )
-              )
-              : (
-                columnCards.map((card) => (
-                  <Card key={card.id} card={card} dragDisabled />
+                    </div>
+                  </div>
                 ))
-              )}
+              )
+            ) : canDrag ? (
+              columnCards.length === 0 ? (
+                <div
+                  className="flex min-h-[120px] w-full items-center justify-center px-2 text-center text-[11px] text-muted-foreground"
+                  aria-hidden
+                >
+                  Drop tasks here
+                </div>
+              ) : (
+                <SortableContext
+                  items={cardIds}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {columnCards.map((card) => (
+                    <Card key={card.id} card={card} dragDisabled={false} />
+                  ))}
+                </SortableContext>
+              )
+            ) : (
+              columnCards.map((card) => (
+                <Card key={card.id} card={card} dragDisabled />
+              ))
+            )}
           </div>
         </div>
 
