@@ -1,3 +1,6 @@
+<img width="2042" height="1060" alt="image" src="https://github.com/user-attachments/assets/ccaa19c4-c3c6-44b2-8982-9f483313e14d" />
+
+
 # Kanban board
 
 Monorepo: **React + Vite** frontend and **Fastify** REST API with **PostgreSQL**, built for the Ravenna-style Kanban challenge (CRUD, DnD, filters, search, comments).
