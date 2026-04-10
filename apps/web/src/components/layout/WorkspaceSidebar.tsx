@@ -80,87 +80,105 @@ export function WorkspaceSidebar({
         </Button>
       </div>
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">
-        <Link
-          to="/"
-          title={collapsed ? "All boards" : undefined}
+      <nav
+        className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2"
+        aria-label="Workspace"
+      >
+        <section
           className={cn(
-            "flex shrink-0 items-center gap-2.5 rounded-lg py-2 text-xs font-medium transition-colors",
-            collapsed ? "md:justify-center md:px-0" : "px-2.5",
-            boardsActive
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
+            "flex flex-col",
+            collapsed ? "min-h-0 flex-1" : "",
           )}
+          aria-labelledby="boards-section-heading"
         >
-          <LayoutGrid className="size-4 shrink-0 opacity-90" strokeWidth={1.75} />
-          <span className={cn(collapsed ? "md:hidden" : "")}>Boards</span>
-        </Link>
+          <Link
+            to="/"
+            title={collapsed ? "All boards" : undefined}
+            className={cn(
+              "flex shrink-0 items-center gap-2.5 rounded-md py-2 text-xs font-medium transition-colors",
+              collapsed ? "md:justify-center md:px-0" : "px-2",
+              boardsActive
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
+            )}
+          >
+            <LayoutGrid className="size-4 shrink-0 opacity-90" strokeWidth={1.75} />
+            <span
+              id="boards-section-heading"
+              className={cn(collapsed ? "md:hidden" : "")}
+            >
+              Boards
+            </span>
+          </Link>
 
-        <div
-          className={cn(
-            "pt-2",
-            collapsed ? "min-h-0 flex-1 md:overflow-y-auto" : "",
-          )}
-        >
-          {listLoading ? (
-            <p
-              className={cn(
-                "px-2 py-1 text-[10px] text-muted-foreground",
-                collapsed ? "md:hidden" : "",
-              )}
-            >
-              Loading…
-            </p>
-          ) : boards.length === 0 ? (
-            <p
-              className={cn(
-                "px-2 py-1 text-[10px] text-muted-foreground",
-                collapsed ? "md:hidden" : "",
-              )}
-            >
-              No boards
-            </p>
-          ) : (
-            <ul className="space-y-0.5">
-              {boards.map((b) => {
-                const isActive = activeBoardId === b.id;
-                return (
-                  <li key={b.id}>
-                    <Link
-                      to={`/board/${b.id}`}
-                      title={collapsed ? b.name : undefined}
-                      className={cn(
-                        "flex items-center gap-2 rounded-md py-1.5 pl-4 text-xs font-medium transition-colors",
-                        collapsed ? "md:justify-center md:px-0 md:py-2" : "px-2 pl-8",
-                        isActive
-                          ? "text-foreground"
-                          : "text-muted-foreground",
-                      )}
-                    >
-                      <span
+          <div
+            className={cn(
+              "mt-1 min-h-0",
+              collapsed ? "flex-1 md:overflow-y-auto" : "border-l border-border/60 pl-2 ml-1.5",
+            )}
+          >
+            {listLoading ? (
+              <p
+                className={cn(
+                  "px-1 py-1 text-[10px] text-muted-foreground",
+                  collapsed ? "md:hidden" : "",
+                )}
+              >
+                Loading…
+              </p>
+            ) : boards.length === 0 ? (
+              <p
+                className={cn(
+                  "px-1 py-1 text-[10px] text-muted-foreground",
+                  collapsed ? "md:hidden" : "",
+                )}
+              >
+                No boards
+              </p>
+            ) : (
+              <ul className="space-y-0.5">
+                {boards.map((b) => {
+                  const isActive = activeBoardId === b.id;
+                  return (
+                    <li key={b.id}>
+                      <Link
+                        to={`/board/${b.id}`}
+                        title={collapsed ? b.name : undefined}
                         className={cn(
-                          "flex size-7 shrink-0 items-center justify-center rounded-md bg-muted/50 text-[10px] font-semibold text-foreground",
-                          collapsed ? "hidden md:flex" : "hidden",
-                        )}
-                        aria-hidden
-                      >
-                        {boardInitial(b.name)}
-                      </span>
-                      <span
-                        className={cn(
-                          "min-w-0 flex-1 truncate",
-                          collapsed ? "md:sr-only" : "",
+                          "flex items-center gap-2 rounded-md py-1.5 text-xs font-medium transition-colors",
+                          collapsed
+                            ? "md:justify-center md:px-0 md:py-2"
+                            : "px-2 pl-3",
+                          isActive
+                            ? "text-foreground"
+                            : "text-muted-foreground hover:text-foreground",
                         )}
                       >
-                        {b.name}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+                        <span
+                          className={cn(
+                            "flex size-7 shrink-0 items-center justify-center rounded-md bg-muted/50 text-[10px] font-semibold text-foreground",
+                            collapsed ? "hidden md:flex" : "hidden",
+                          )}
+                          aria-hidden
+                        >
+                          {boardInitial(b.name)}
+                        </span>
+                        <span
+                          className={cn(
+                            "min-w-0 flex-1 truncate",
+                            collapsed ? "md:sr-only" : "",
+                          )}
+                        >
+                          {b.name}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </section>
       </nav>
     </aside>
   );

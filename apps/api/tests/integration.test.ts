@@ -108,4 +108,74 @@ describe.skipIf(!dbUrl)("API integration (Postgres)", () => {
     const { cards } = JSON.parse(after.body) as { cards: { id: string }[] };
     expect(cards.some((c) => c.id === cardId)).toBe(false);
   });
+
+  it("PATCH /columns/:columnId/reorder sets sequential positions", async () => {
+    const boardsRes = await app.inject({ method: "GET", url: "/api/boards" });
+    expect(boardsRes.statusCode).toBe(200);
+    const { boards } = JSON.parse(boardsRes.body) as { boards: { id: string }[] };
+    expect(boards.length).toBeGreaterThan(0);
+    const boardId = boards[0].id;
+    const detail = await app.inject({ method: "GET", url: `/api/boards/${boardId}` });
+    expect(detail.statusCode).toBe(200);
+    const parsed = JSON.parse(detail.body) as {
+      columns: { id: string }[];
+      cards: { columnId: string; position: number }[];
+    };
+    expect(parsed.columns.length).toBeGreaterThan(0);
+    const columnId = parsed.columns[0].id;
+    const inCol = parsed.cards.filter((c) => c.columnId === columnId);
+    let nextPos =
+      inCol.length === 0 ? 0 : Math.max(...inCol.map((c) => c.position)) + 1;
+
+    const createA = await app.inject({
+      method: "POST",
+      url: "/api/cards",
+      headers: { "content-type": "application/json" },
+      payload: JSON.stringify({
+        boardId,
+        columnId,
+        title: "Reorder test A",
+        position: nextPos++,
+      }),
+    });
+    expect(createA.statusCode).toBe(201);
+    const cardA = JSON.parse(createA.body) as { id: string };
+
+    const createB = await app.inject({
+      method: "POST",
+      url: "/api/cards",
+      headers: { "content-type": "application/json" },
+      payload: JSON.stringify({
+        boardId,
+        columnId,
+        title: "Reorder test B",
+        position: nextPos++,
+      }),
+    });
+    expect(createB.statusCode).toBe(201);
+    const cardB = JSON.parse(createB.body) as { id: string };
+
+    const reorder = await app.inject({
+      method: "PATCH",
+      url: `/api/columns/${columnId}/reorder`,
+      headers: { "content-type": "application/json" },
+      payload: JSON.stringify({ orderedCardIds: [cardB.id, cardA.id] }),
+    });
+    expect(reorder.statusCode).toBe(204);
+
+    const after = await app.inject({ method: "GET", url: `/api/boards/${boardId}` });
+    expect(after.statusCode).toBe(200);
+    const { cards: afterCards } = JSON.parse(after.body) as {
+      cards: { id: string; columnId: string; position: number }[];
+    };
+    const a = afterCards.find((c) => c.id === cardA.id);
+    const b = afterCards.find((c) => c.id === cardB.id);
+    expect(a).toBeDefined();
+    expect(b).toBeDefined();
+    expect(b!.position).toBe(0);
+    expect(a!.position).toBe(1);
+
+    await app.inject({ method: "DELETE", url: `/api/cards/${cardA.id}` });
+    await app.inject({ method: "DELETE", url: `/api/cards/${cardB.id}` });
+  });
 });

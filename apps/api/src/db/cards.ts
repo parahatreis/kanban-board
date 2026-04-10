@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, isNull, or, type SQL } from "drizzle-orm";
+import { and, asc, eq, ilike, isNull, or, sql, type SQL } from "drizzle-orm";
 import { cards } from "shared";
 import type { Database } from "./client.js";
 
@@ -105,24 +105,26 @@ export async function moveCard(
 
 /**
  * Set positions within a column for the given ordered card ids (0..n-1).
+ * Single statement to avoid N round trips and reduce lock duration.
  */
 export async function setCardPositionsInColumn(
   db: Database,
   columnId: string,
   orderedCardIds: string[],
 ) {
-  for (let i = 0; i < orderedCardIds.length; i++) {
-    await db
-      .update(cards)
-      .set({ position: i })
-      .where(
-        and(
-          eq(cards.columnId, columnId),
-          eq(cards.id, orderedCardIds[i]),
-          isNull(cards.deletedAt),
-        ),
-      );
-  }
+  if (orderedCardIds.length === 0) return;
+
+  await db.transaction(async (tx) => {
+    const valueRows = orderedCardIds.map((id, i) => sql`(${id}::uuid, ${i}::int)`);
+    await tx.execute(sql`
+      UPDATE cards AS c
+      SET position = j.pos
+      FROM (VALUES ${sql.join(valueRows, sql`, `)}) AS j(id, pos)
+      WHERE c.id = j.id
+        AND c.column_id = ${columnId}
+        AND c.deleted_at IS NULL
+    `);
+  });
 }
 
 export async function softDeleteCard(db: Database, id: string) {
