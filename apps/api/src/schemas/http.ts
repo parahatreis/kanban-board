@@ -37,3 +37,15 @@ export const moveCardBodySchema = z.object({
 export const reorderColumnBodySchema = z.object({
   orderedCardIds: z.array(z.string().uuid()).min(1),
 });
+
+export const createColumnBodySchema = z.object({
+  title: z.string().min(1),
+});
+
+export const patchColumnBodySchema = z.object({
+  title: z.string().min(1),
+});
+
+export const reorderBoardColumnsBodySchema = z.object({
+  orderedColumnIds: z.array(z.string().uuid()).min(1),
+});

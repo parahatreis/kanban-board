@@ -8,7 +8,7 @@ This document translates the [Ravenna Coding Challenge](./Ravenna%20Coding%20Cha
 
 - **Product**: Small Kanban board with a React frontend and a backend API ([challenge brief](./Ravenna%20Coding%20Challenge.md)).
 - **Timebox**: 4–6 hours (challenge expectation).
-- **User model**: Challenge assumes a **single end user** (no login required). The **database** still includes a **`users`** table so boards have an owner (`boards.user_id` → `users.id`); the app can use one fixed or implicit user until real auth is added.
+- **User model**: Challenge assumes a **single end user** (no login required). The **database** still includes a `**users`** table so boards have an owner (`boards.user_id` → `users.id`); the app can use one fixed or implicit user until real auth is added.
 - **Evaluation (20 pts)**: Frontend implementation (7), product and interaction design (6), backend implementation (5), infrastructure and setup (2).
 - **Submission**: Source code, README, assumptions and trade-offs, optional deployed link.
 
@@ -38,6 +38,8 @@ flowchart LR
   api --> shared
 ```
 
+
+
 ---
 
 ## Tooling
@@ -50,23 +52,25 @@ flowchart LR
 ## Dependency installs
 
 - Add dependencies with **bare package names** — no version suffix in the command (e.g. `yarn workspace web add vite react react-dom`, `yarn workspace api add fastify`, `yarn add -D typescript`). Avoid documenting installs as `package@1.2.3` in this plan; Yarn resolves **latest** compatible releases for the workspace.
-- **Reproducibility**: Commit **`yarn.lock`** so everyone and CI resolve the same tree.
+- **Reproducibility**: Commit `**yarn.lock`** so everyone and CI resolve the same tree.
 - **Routine dependencies**: Refer to stacks by **package identity** below, not pinned semver numbers.
 
 ---
 
 ## Tech stack
 
-| Layer | Choice | Role |
-|--------|--------|------|
-| Frontend app | React, Vite, TypeScript | SPA build and dev server |
-| Styling | Tailwind CSS, shadcn/ui | Layout, components, accessible primitives |
-| Drag and drop | @dnd-kit | Move cards between columns; reorder within a column |
-| Client state | Zustand | Board/card UI state; explain choice in README |
-| Forms | React Hook Form + Zod | Create/edit card modals; validation aligned with shared schemas |
-| Backend | Fastify, Zod | HTTP API, request validation, consistent error shape |
-| Persistence | Drizzle ORM, PostgreSQL | Users, boards, columns, cards; migrations |
-| Shared | `packages/shared` | Zod schemas, inferred types, enums, small pure helpers |
+
+| Layer         | Choice                  | Role                                                            |
+| ------------- | ----------------------- | --------------------------------------------------------------- |
+| Frontend app  | React, Vite, TypeScript | SPA build and dev server                                        |
+| Styling       | Tailwind CSS, shadcn/ui | Layout, components, accessible primitives                       |
+| Drag and drop | @dnd-kit                | Move cards between columns; reorder within a column             |
+| Client state  | Zustand                 | Board/card UI state; explain choice in README                   |
+| Forms         | React Hook Form + Zod   | Create/edit card modals; validation aligned with shared schemas |
+| Backend       | Fastify, Zod            | HTTP API, request validation, consistent error shape            |
+| Persistence   | Drizzle ORM, PostgreSQL | Users, boards, columns, cards; migrations                       |
+| Shared        | `packages/shared`       | Zod schemas, inferred types, enums, small pure helpers          |
+
 
 **Challenge mapping**: Type-safe server and client; validation and consistent errors; logging and tests on the API; component structure (Board, Column, Card, filters); keyboard-friendly modals; basic accessibility; tests for core logic (create, move, filter, group).
 
@@ -76,21 +80,21 @@ flowchart LR
 
 **Frontend**
 
-- [ ] Create, edit, delete cards (title + description minimum)
-- [ ] Move cards between columns
-- [ ] Reorder cards within a column (DnD or equivalent UX)
-- [ ] Filter cards by at least one attribute
-- [ ] Group cards by an attribute; board reorganizes when grouping changes
-- [ ] Tests covering core logic: create, move, filter, group
+- Create, edit, delete cards (title + description minimum)
+- Move cards between columns
+- Reorder cards within a column (DnD or equivalent UX)
+- Filter cards by at least one attribute
+- Group cards by an attribute; board reorganizes when grouping changes
+- Tests covering core logic: create, move, filter, group
 
 **Backend**
 
-- [ ] Persist boards, columns, and cards
-- [ ] CRUD cards
-- [ ] Move card between columns
-- [ ] Reorder cards within a column
-- [ ] List cards with filters
-- [ ] Input validation; consistent error responses; basic logging; tests on core paths
+- Persist boards, columns, and cards
+- CRUD cards
+- Move card between columns
+- Reorder cards within a column
+- List cards with filters
+- Input validation; consistent error responses; basic logging; tests on core paths
 
 ---
 
@@ -110,12 +114,14 @@ Keep this package **framework-agnostic**:
 
 Design REST-style JSON endpoints under a single API base path (prefix as implemented, e.g. `/api`):
 
-| Concern | Examples |
-|---------|----------|
-| Cards CRUD | `POST`, `GET`, `PATCH`/`PUT`, `DELETE` for cards (scoped by board/column as appropriate) |
-| Move between columns | `PATCH` (or `POST`) to change a card’s column (and position) |
-| Reorder within column | `PATCH` (or `POST`) to update order indices within a column |
-| List with filters | `GET` with query params (e.g. status, label, text) matching challenge “filter” |
+
+| Concern               | Examples                                                                                 |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| Cards CRUD            | `POST`, `GET`, `PATCH`/`PUT`, `DELETE` for cards (scoped by board/column as appropriate) |
+| Move between columns  | `PATCH` (or `POST`) to change a card’s column (and position)                             |
+| Reorder within column | `PATCH` (or `POST`) to update order indices within a column                              |
+| List with filters     | `GET` with query params (e.g. status, label, text) matching challenge “filter”           |
+
 
 Exact paths and request bodies should be validated with **Zod** (shared schemas where possible). Boards/columns may be fixed seed data initially or exposed via minimal read endpoints if the UI requires them.
 
@@ -123,12 +129,14 @@ Exact paths and request bodies should be validated with **Zod** (shared schemas 
 
 ## Data model (PostgreSQL / Drizzle)
 
-| Table | Purpose |
-|--------|---------|
-| `users` | `id` (uuid), unique `email`, optional `display_name`, `created_at` |
-| `boards` | `id`, **`user_id`** → `users`, `name`, `created_at` |
-| `columns` | `id`, `board_id` → `boards`, `title`, `position` (order within board) |
-| `cards` | `id`, `board_id`, `column_id`, `title`, `description`, `position`, `label` (filter/group) |
+
+| Table     | Purpose                                                                                   |
+| --------- | ----------------------------------------------------------------------------------------- |
+| `users`   | `id` (uuid), unique `email`, optional `display_name`, `created_at`                        |
+| `boards`  | `id`, `**user_id`** → `users`, `name`, `created_at`                                       |
+| `columns` | `id`, `board_id` → `boards`, `title`, `position` (order within board)                     |
+| `cards`   | `id`, `board_id`, `column_id`, `title`, `description`, `position`, `label` (filter/group) |
+
 
 Indexes: FK columns and `(board_id, label)`, `(column_id, position)` as needed for list and reorder queries.
 
@@ -152,7 +160,7 @@ Indexes: FK columns and `(board_id, label)`, `(column_id, position)` as needed f
 - **Drizzle** schema: **users** (unique email), **boards** (owned by `user_id`), columns, cards (IDs, foreign keys, ordering fields, card title/description and filter/group attributes).
 - PostgreSQL connection module; migrations generated/applied as per Drizzle workflow.
 - Data access: repositories or direct Drizzle queries in a dedicated layer (`db/`, `models/`, etc.).
-- Align **`packages/shared`** Zod schemas and types with DB columns.
+- Align `**packages/shared`** Zod schemas and types with DB columns.
 
 **Exit**: Migrations apply cleanly; can read/write data from scripts or tests **without** Fastify routes.
 
@@ -195,7 +203,7 @@ Indexes: FK columns and `(board_id, label)`, `(column_id, position)` as needed f
 ### Phase 6 — Integration (frontend and backend)
 
 - API client (base URL from env); fetch or small wrapper (e.g. `ky`); wire **Zustand** to server (loading/error states; optional optimistic updates).
-- CORS and env vars for local dev (`VITE_*`, server port, database URL).
+- CORS and env vars for local dev (`VITE_`*, server port, database URL).
 - Manual or scripted end-to-end sanity check: full Kanban flow against running API and DB.
 - Fill **README** using the checklist below.
 
@@ -209,24 +217,20 @@ From the challenge [Extended Requirements (Optional)](./Ravenna%20Coding%20Chall
 
 **Frontend**
 
-- [ ] Card details panel (subtasks, tags, comments)
-- [ ] Column creation/reordering
-- [ ] Keyboard shortcuts
-- [ ] Dark mode or theming
-- [ ] Mobile responsiveness
+- Card details panel (Bix box description, labels (in chip component), comments)
+- Mobile responsiveness
 
 **Backend**
 
-- [ ] Pagination or search
-- [ ] Soft delete
-- [ ] Basic concurrency safety for reordering
-- [ ] Simple rate limiting
+- Search
+- Soft delete
+- Simple rate limiting
 
 **Engineering quality**
 
-- [ ] Integration tests
-- [ ] Structured logging
-- [ ] Performance optimizations for large boards
+- Integration tests
+- Structured logging
+- Performance optimizations for large boards
 
 **Exit**: No required gate; pick items by priority and document trade-offs in the README.
 
@@ -236,13 +240,13 @@ From the challenge [Extended Requirements (Optional)](./Ravenna%20Coding%20Chall
 
 When implementing, ensure the README includes:
 
-- [ ] Setup and run instructions (Node/Yarn versions, env vars, DB, migrations, dev commands)
-- [ ] Architecture overview (monorepo, apps, shared package)
-- [ ] State management approach (Zustand) — brief rationale
-- [ ] Database and schema overview (Drizzle: users, boards, columns, cards)
-- [ ] API overview (main routes and purposes)
-- [ ] Key UX decisions
-- [ ] Trade-offs and future improvements
+- Setup and run instructions (Node/Yarn versions, env vars, DB, migrations, dev commands)
+- Architecture overview (monorepo, apps, shared package)
+- State management approach (Zustand) — brief rationale
+- Database and schema overview (Drizzle: users, boards, columns, cards)
+- API overview (main routes and purposes)
+- Key UX decisions
+- Trade-offs and future improvements
 
 ---
 
@@ -259,3 +263,4 @@ When implementing, ensure the README includes:
 - Aim for a working end-to-end Kanban flow early, then deepen.
 - Keep the API focused on supporting the UX.
 - Prefer clarity over feature count; document trade-offs explicitly.
+

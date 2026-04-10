@@ -46,11 +46,6 @@ export function HomePage() {
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col overflow-y-auto px-6 py-10">
       <h1 className="text-xl font-semibold tracking-tight text-foreground">Boards</h1>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Open a board to view its Kanban. Data is loaded from the API (run the API and web app; see
-        README).
-      </p>
-
       {error ? (
         <p className="mt-6 text-sm text-destructive" role="alert">
           {error}

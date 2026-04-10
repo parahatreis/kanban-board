@@ -332,7 +332,6 @@ function EditCardFormInner({
       >
         <DialogHeader>
           <DialogTitle>Edit card</DialogTitle>
-          <DialogDescription>Update title, description, label, or assignee.</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <p className="text-xs text-muted-foreground">

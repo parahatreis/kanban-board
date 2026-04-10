@@ -11,6 +11,7 @@ import { getBoardDetail } from "@/api/boards";
 import { listUsers } from "@/api/users";
 import { ApiError } from "@/api/client";
 import * as cardsApi from "@/api/cards";
+import * as columnsApi from "@/api/columns";
 
 export type BoardLoadStatus = "idle" | "loading" | "ready" | "not_found" | "error";
 
@@ -36,6 +37,10 @@ export interface BoardStoreState {
     target: { columnId: string; position: number },
   ) => Promise<void>;
   reorderInColumn: (columnId: string, orderedCardIds: string[]) => Promise<void>;
+  addColumn: (title: string) => Promise<void>;
+  updateColumn: (columnId: string, title: string) => Promise<void>;
+  reorderColumns: (orderedColumnIds: string[]) => Promise<void>;
+  deleteColumn: (columnId: string) => Promise<void>;
 }
 
 function nextPositionInColumn(cards: CardRow[], columnId: string): number {
@@ -153,6 +158,30 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
   reorderInColumn: async (columnId, orderedCardIds) => {
     const boardId = get().boardId;
     await cardsApi.reorderColumn(columnId, orderedCardIds);
+    await get().loadBoard(boardId, { silent: true });
+  },
+
+  addColumn: async (title) => {
+    const boardId = get().boardId;
+    await columnsApi.createBoardColumn(boardId, { title });
+    await get().loadBoard(boardId, { silent: true });
+  },
+
+  updateColumn: async (columnId, title) => {
+    const boardId = get().boardId;
+    await columnsApi.patchColumn(columnId, { title });
+    await get().loadBoard(boardId, { silent: true });
+  },
+
+  reorderColumns: async (orderedColumnIds) => {
+    const boardId = get().boardId;
+    await columnsApi.reorderBoardColumns(boardId, orderedColumnIds);
+    await get().loadBoard(boardId, { silent: true });
+  },
+
+  deleteColumn: async (columnId) => {
+    const boardId = get().boardId;
+    await columnsApi.deleteColumn(columnId);
     await get().loadBoard(boardId, { silent: true });
   },
 }));
