@@ -25,6 +25,7 @@ export function Board() {
   const boardId = useBoardStore((s) => s.boardId);
   const columns = useBoardStore((s) => s.columns);
   const cards = useBoardStore((s) => s.cards);
+  const users = useBoardStore((s) => s.users);
   const moveCard = useBoardStore((s) => s.moveCard);
   const reorderInColumn = useBoardStore((s) => s.reorderInColumn);
   const canDrag = useBoardStore((s) => getCanDrag(s));
@@ -211,7 +212,7 @@ export function Board() {
       <DragOverlay dropAnimation={null}>
         {canDrag && activeCard ? (
           <div className="w-[min(100vw-2rem,320px)] overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_1px_3px_0_rgb(0_0_0_/_0.1),0_1px_2px_-1px_rgb(0_0_0_/_0.1)] ring-2 ring-primary/15">
-            <CardPreview card={activeCard} />
+            <CardPreview card={activeCard} users={users} />
           </div>
         ) : null}
       </DragOverlay>

@@ -20,6 +20,13 @@ const DEMO_EMAIL = "demo@kanban.local";
 const DEMO_BOARD_NAME = "Demo board";
 const SECOND_BOARD_NAME = "Second board";
 
+/** Extra users for assignee picker (idempotent by email). */
+const EXTRA_TEAM = [
+  { email: "alex@kanban.local", displayName: "Alex Rivera" },
+  { email: "sam@kanban.local", displayName: "Sam Chen" },
+  { email: "taylor@kanban.local", displayName: "Taylor Brooks" },
+] as const;
+
 loadMonorepoEnv();
 
 function getDatabaseUrl(): string {
@@ -42,6 +49,12 @@ async function main() {
     });
     if (!created) throw new Error("insertUser returned nothing");
     user = created;
+  }
+
+  for (const row of EXTRA_TEAM) {
+    if (!(await getUserByEmail(db, row.email))) {
+      await insertUser(db, { email: row.email, displayName: row.displayName });
+    }
   }
 
   const boards = await listBoardsByUser(db, user.id);

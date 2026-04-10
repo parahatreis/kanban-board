@@ -1,4 +1,4 @@
-import type { BoardRow, CardRow, ColumnRow } from "shared";
+import type { BoardRow, CardRow, ColumnRow, UserRow } from "shared";
 
 function parseDate(value: unknown): Date {
   if (value instanceof Date) return value;
@@ -17,11 +17,20 @@ export function normalizeColumn(row: ColumnRow): ColumnRow {
   return { ...row };
 }
 
+export function normalizeUser(row: UserRow): UserRow {
+  return {
+    ...row,
+    createdAt: parseDate(row.createdAt as unknown),
+  };
+}
+
 export function normalizeCard(row: CardRow): CardRow {
   return {
     ...row,
     description: row.description ?? "",
     label: row.label ?? "",
+    createdAt: parseDate(row.createdAt as unknown),
+    assigneeUserId: row.assigneeUserId ?? null,
   };
 }
 

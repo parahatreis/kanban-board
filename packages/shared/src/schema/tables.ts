@@ -79,11 +79,18 @@ export const cards = pgTable(
     description: text("description").notNull().default(""),
     position: integer("position").notNull(),
     label: text("label").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" })
+      .notNull()
+      .defaultNow(),
+    assigneeUserId: uuid("assignee_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
   },
   (t) => [
     index("cards_board_id_idx").on(t.boardId),
     index("cards_column_id_idx").on(t.columnId),
     index("cards_column_position_idx").on(t.columnId, t.position),
     index("cards_board_label_idx").on(t.boardId, t.label),
+    index("cards_assignee_user_id_idx").on(t.assigneeUserId),
   ],
 );

@@ -36,6 +36,7 @@ export const cardCreateFormSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   label: z.string().optional(),
+  assigneeUserId: z.string().uuid().optional(),
 });
 
 /** Edit-card form fields (subset of patch). */
@@ -43,6 +44,7 @@ export const cardEditFormSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   label: z.string().optional(),
+  assigneeUserId: z.string().uuid().nullable().optional(),
 });
 
 export type CardCreateForm = z.infer<typeof cardCreateFormSchema>;

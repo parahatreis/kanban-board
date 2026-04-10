@@ -20,10 +20,11 @@ There is no authentication yet. Every request is attributed to a **default user*
 | GET | `/api/health` | Liveness; includes shared package version |
 | GET | `/api/boards` | List boards for the default user |
 | GET | `/api/boards/:boardId` | Board, columns, and cards (one payload for the Kanban UI) |
+| GET | `/api/users` | List users (`id`, `email`, `displayName`, `createdAt`) — for assignee picker |
 | GET | `/api/boards/:boardId/cards` | List cards; optional query `label`, `search` (substring on title/description) |
-| POST | `/api/cards` | Create card (`boardId`, `columnId`, `title`, `description?`, `position`, `label?`) |
+| POST | `/api/cards` | Create card (`boardId`, `columnId`, `title`, `description?`, `position`, `label?`, `assigneeUserId?`) |
 | GET | `/api/cards/:cardId` | Get one card |
-| PATCH | `/api/cards/:cardId` | Update fields (`title`, `description`, `label`, `position`, `columnId`; not for moving boards) |
+| PATCH | `/api/cards/:cardId` | Update fields (`title`, `description`, `label`, `position`, `columnId`, `assigneeUserId` set to `null` to clear; not for moving boards) |
 | PATCH | `/api/cards/:cardId/move` | Move card (`columnId`, `position`) |
 | DELETE | `/api/cards/:cardId` | Delete card |
 | PATCH | `/api/columns/:columnId/reorder` | Body `{ "orderedCardIds": ["uuid", ...] }` — positions 0..n-1 |
@@ -52,14 +53,14 @@ curl -s -X POST http://localhost:3001/api/cards \
 
 ## Database
 
-The Drizzle schema includes **`users`** (unique `email`, optional `display_name`) and **`boards`** with **`user_id`** referencing `users` (board ownership). Columns and cards are unchanged from the Kanban model. After changing schema, regenerate and apply migrations before running the seed script.
+The Drizzle schema includes **`users`** (unique `email`, optional `display_name`) and **`boards`** with **`user_id`** referencing `users` (board ownership). **`cards`** include **`created_at`** (default now) and optional **`assignee_user_id`** referencing **`users`** (`ON DELETE SET NULL`). After changing schema, regenerate and apply migrations before running the seed script.
 
 1. Set `DATABASE_URL` in the repo root `.env` (see `.env.example`).
 2. Generate SQL from the shared Drizzle schema: `yarn workspace api db:generate`
 3. Apply migrations: `yarn workspace api db:migrate`
 4. Optional: `yarn workspace api db:studio` to inspect the database.
 
-After migrations, seed persistent **demo** data (user `demo@kanban.local`, boards “Demo board” and “Second board” with sample columns/cards). Safe to run twice: it only creates boards that are missing by name.
+After migrations, seed persistent **demo** data (user `demo@kanban.local`, extra team users for assignees, boards “Demo board” and “Second board” with sample columns/cards). Safe to run twice: it only creates users/boards that are missing.
 
 ```bash
 yarn workspace api db:seed

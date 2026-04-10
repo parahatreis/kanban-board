@@ -1,6 +1,7 @@
 import type { Database } from "../db/client.js";
 import * as dbCards from "../db/cards.js";
 import * as dbColumns from "../db/columns.js";
+import * as dbUsers from "../db/users.js";
 import type { CardListFilters } from "../db/cards.js";
 import { HttpError } from "../lib/errors.js";
 import * as boardsService from "./boards.js";
@@ -38,12 +39,19 @@ export async function createCard(
     description?: string;
     position: number;
     label?: string;
+    assigneeUserId?: string;
   },
 ) {
   await boardsService.assertBoardOwnedByUser(db, input.boardId, userId);
   const column = await dbColumns.getColumnById(db, input.columnId);
   if (!column || column.boardId !== input.boardId) {
     throw new HttpError(400, "Column does not belong to this board", "INVALID_COLUMN");
+  }
+  if (input.assigneeUserId !== undefined) {
+    const assignee = await dbUsers.getUserById(db, input.assigneeUserId);
+    if (!assignee) {
+      throw new HttpError(400, "Assignee user not found", "ASSIGNEE_NOT_FOUND");
+    }
   }
   return dbCards.insertCard(db, {
     boardId: input.boardId,
@@ -52,6 +60,7 @@ export async function createCard(
     description: input.description,
     position: input.position,
     label: input.label,
+    assigneeUserId: input.assigneeUserId ?? null,
   });
 }
 
@@ -66,6 +75,7 @@ export async function updateCard(
     position?: number;
     columnId?: string;
     boardId?: string;
+    assigneeUserId?: string | null;
   },
 ) {
   const card = await assertCardOwnedByUser(db, cardId, userId);
@@ -78,12 +88,21 @@ export async function updateCard(
   if (patch.boardId !== undefined && patch.boardId !== card.boardId) {
     throw new HttpError(400, "Cannot move card to another board via PATCH", "INVALID_BOARD");
   }
+  if (patch.assigneeUserId !== undefined && patch.assigneeUserId !== null) {
+    const assignee = await dbUsers.getUserById(db, patch.assigneeUserId);
+    if (!assignee) {
+      throw new HttpError(400, "Assignee user not found", "ASSIGNEE_NOT_FOUND");
+    }
+  }
   return dbCards.updateCard(db, cardId, {
     title: patch.title,
     description: patch.description,
     label: patch.label,
     position: patch.position,
     columnId: patch.columnId,
+    ...(patch.assigneeUserId !== undefined
+      ? { assigneeUserId: patch.assigneeUserId }
+      : {}),
   });
 }
 

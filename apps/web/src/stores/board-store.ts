@@ -1,6 +1,14 @@
 import { create } from "zustand";
-import type { BoardRow, CardCreateForm, CardEditForm, CardRow, ColumnRow } from "shared";
+import type {
+  BoardRow,
+  CardCreateForm,
+  CardEditForm,
+  CardRow,
+  ColumnRow,
+  UserRow,
+} from "shared";
 import { getBoardDetail } from "@/api/boards";
+import { listUsers } from "@/api/users";
 import { ApiError } from "@/api/client";
 import * as cardsApi from "@/api/cards";
 
@@ -11,6 +19,8 @@ export interface BoardStoreState {
   boardId: string;
   columns: ColumnRow[];
   cards: CardRow[];
+  /** Users for assignee picker (same list as API). */
+  users: UserRow[];
   /** Empty string = show all labels */
   labelFilter: string;
   loadStatus: BoardLoadStatus;
@@ -39,6 +49,7 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
   boardId: "",
   columns: [],
   cards: [],
+  users: [],
   labelFilter: "",
   loadStatus: "idle",
   loadError: null,
@@ -55,16 +66,21 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
         board: null,
         columns: [],
         cards: [],
+        users: [],
         labelFilter: "",
       });
     }
     try {
-      const data = await getBoardDetail(boardId);
+      const [data, usersRows] = await Promise.all([
+        getBoardDetail(boardId),
+        listUsers(),
+      ]);
       set({
         board: data.board,
         boardId: data.board.id,
         columns: [...data.columns].sort((a, b) => a.position - b.position),
         cards: data.cards,
+        users: usersRows,
         loadStatus: "ready",
         loadError: null,
       });
@@ -77,6 +93,7 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
             board: null,
             columns: [],
             cards: [],
+            users: [],
           });
         } else {
           const msg = e instanceof Error ? e.message : "Failed to load board";
@@ -86,6 +103,7 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
             board: null,
             columns: [],
             cards: [],
+            users: [],
           });
         }
       }
@@ -104,6 +122,7 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
       description: input.description,
       position,
       label: input.label,
+      assigneeUserId: input.assigneeUserId,
     });
     await get().loadBoard(boardId, { silent: true });
   },
@@ -114,6 +133,7 @@ export const useBoardStore = create<BoardStoreState>((set, get) => ({
       title: patch.title,
       description: patch.description,
       label: patch.label,
+      assigneeUserId: patch.assigneeUserId,
     });
     await get().loadBoard(boardId, { silent: true });
   },

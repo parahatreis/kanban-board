@@ -31,4 +31,8 @@ export const cardsRelations = relations(cards, ({ one }) => ({
     fields: [cards.columnId],
     references: [columns.id],
   }),
+  assignee: one(users, {
+    fields: [cards.assigneeUserId],
+    references: [users.id],
+  }),
 }));

@@ -11,6 +11,7 @@ export async function insertCard(
     description?: string;
     position: number;
     label?: string;
+    assigneeUserId?: string | null;
   },
 ) {
   const [row] = await db
@@ -78,6 +79,7 @@ export async function updateCard(
     position?: number;
     columnId?: string;
     boardId?: string;
+    assigneeUserId?: string | null;
   },
 ) {
   const [row] = await db

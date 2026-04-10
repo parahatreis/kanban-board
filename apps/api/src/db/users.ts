@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { users } from "shared";
 import type { Database } from "./client.js";
 
@@ -24,7 +24,7 @@ export async function getUserByEmail(db: Database, email: string) {
 
 export async function listUsers(db: Database) {
   return db.query.users.findMany({
-    orderBy: (u, { desc }) => [desc(u.createdAt)],
+    orderBy: [asc(users.email)],
   });
 }
 

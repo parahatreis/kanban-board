@@ -9,6 +9,7 @@ export async function createCard(body: {
   description?: string;
   position: number;
   label?: string;
+  assigneeUserId?: string;
 }): Promise<CardRow> {
   const row = await apiFetch<CardRow>("/api/cards", {
     method: "POST",
@@ -23,6 +24,7 @@ export async function patchCard(
     title?: string;
     description?: string;
     label?: string;
+    assigneeUserId?: string | null;
   },
 ): Promise<CardRow> {
   const row = await apiFetch<CardRow>(`/api/cards/${cardId}`, {

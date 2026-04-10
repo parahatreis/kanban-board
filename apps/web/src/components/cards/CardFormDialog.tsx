@@ -8,6 +8,7 @@ import {
   type CardCreateForm,
   type CardEditForm,
   type CardRow,
+  type UserRow,
 } from "shared";
 import { useBoardStore } from "@/stores/board-store";
 import { Button } from "@/components/ui/button";
@@ -58,8 +59,20 @@ type EditProps = {
 
 export type CardFormDialogProps = CreateProps | EditProps;
 
+function formatCardCreatedAt(d: Date): string {
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(d);
+  } catch {
+    return String(d);
+  }
+}
+
 export function CardFormDialog(props: CardFormDialogProps) {
   const columns = useBoardStore((s) => s.columns);
+  const users = useBoardStore((s) => s.users);
   const addCard = useBoardStore((s) => s.addCard);
   const updateCard = useBoardStore((s) => s.updateCard);
   const deleteCard = useBoardStore((s) => s.deleteCard);
@@ -72,6 +85,7 @@ export function CardFormDialog(props: CardFormDialogProps) {
         onOpenChange={props.onOpenChange}
         defaultColumnId={props.defaultColumnId}
         columns={columns}
+        users={users}
         addCard={addCard}
       />
     );
@@ -82,6 +96,7 @@ export function CardFormDialog(props: CardFormDialogProps) {
       card={props.card}
       open={props.open}
       onOpenChange={props.onOpenChange}
+      users={users}
       updateCard={updateCard}
       deleteCard={deleteCard}
     />
@@ -94,6 +109,7 @@ function CreateCardFormInner({
   onOpenChange,
   defaultColumnId,
   columns,
+  users,
   addCard,
 }: {
   boardId: string;
@@ -101,6 +117,7 @@ function CreateCardFormInner({
   onOpenChange: (open: boolean) => void;
   defaultColumnId?: string;
   columns: { id: string; title: string }[];
+  users: UserRow[];
   addCard: (input: CardCreateForm) => Promise<void>;
 }) {
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -113,6 +130,7 @@ function CreateCardFormInner({
       title: "",
       description: "",
       label: "",
+      assigneeUserId: undefined,
     },
   });
 
@@ -138,6 +156,7 @@ function CreateCardFormInner({
         title: "",
         description: "",
         label: "",
+        assigneeUserId: undefined,
       });
     } catch (e) {
       const msg =
@@ -206,6 +225,27 @@ function CreateCardFormInner({
               {...form.register("label")}
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="create-assignee">Assignee</Label>
+            <Select
+              value={form.watch("assigneeUserId") ?? "__none__"}
+              onValueChange={(v) =>
+                form.setValue("assigneeUserId", v === "__none__" ? undefined : v)
+              }
+            >
+              <SelectTrigger id="create-assignee">
+                <SelectValue placeholder="Unassigned" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Unassigned</SelectItem>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.displayName?.trim() || u.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {submitError ? (
             <p className="text-sm text-destructive" role="alert">
               {submitError}
@@ -226,12 +266,14 @@ function EditCardFormInner({
   card,
   open,
   onOpenChange,
+  users,
   updateCard,
   deleteCard,
 }: {
   card: CardRow;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  users: UserRow[];
   updateCard: (id: string, patch: CardEditForm) => Promise<void>;
   deleteCard: (id: string) => Promise<void>;
 }) {
@@ -246,6 +288,7 @@ function EditCardFormInner({
       title: card.title,
       description: card.description,
       label: card.label,
+      assigneeUserId: card.assigneeUserId ?? null,
     },
   });
 
@@ -254,6 +297,7 @@ function EditCardFormInner({
       title: card.title,
       description: card.description,
       label: card.label,
+      assigneeUserId: card.assigneeUserId ?? null,
     });
   }, [card, form]);
 
@@ -288,9 +332,15 @@ function EditCardFormInner({
       >
         <DialogHeader>
           <DialogTitle>Edit card</DialogTitle>
-          <DialogDescription>Update title, description, or label.</DialogDescription>
+          <DialogDescription>Update title, description, label, or assignee.</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
+          <p className="text-xs text-muted-foreground">
+            Created{" "}
+            <time dateTime={card.createdAt.toISOString()}>
+              {formatCardCreatedAt(card.createdAt)}
+            </time>
+          </p>
           <div className="space-y-2">
             <Label htmlFor="edit-title">Title</Label>
             <Input id="edit-title" {...form.register("title")} />
@@ -307,6 +357,27 @@ function EditCardFormInner({
           <div className="space-y-2">
             <Label htmlFor="edit-label">Label</Label>
             <Input id="edit-label" {...form.register("label")} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-assignee">Assignee</Label>
+            <Select
+              value={form.watch("assigneeUserId") ?? "__none__"}
+              onValueChange={(v) =>
+                form.setValue("assigneeUserId", v === "__none__" ? null : v)
+              }
+            >
+              <SelectTrigger id="edit-assignee">
+                <SelectValue placeholder="Unassigned" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Unassigned</SelectItem>
+                {users.map((u) => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.displayName?.trim() || u.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           {submitError ? (
             <p className="text-sm text-destructive" role="alert">

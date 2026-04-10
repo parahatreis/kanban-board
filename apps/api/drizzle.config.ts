@@ -17,7 +17,8 @@ if (!databaseUrl) {
 export default defineConfig({
   dialect: "postgresql",
   schema: path.join(__dirname, "../../packages/shared/src/schema/tables.ts"),
-  out: path.join(__dirname, "drizzle"),
+  /** Relative to this config file — avoids drizzle-kit path bugs with absolute `out`. */
+  out: "./drizzle",
   dbCredentials: {
     url: databaseUrl ?? "",
   },

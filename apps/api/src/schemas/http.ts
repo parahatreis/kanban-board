@@ -14,6 +14,7 @@ export const createCardBodySchema = z.object({
   description: z.string().optional(),
   position: z.coerce.number().int().min(0),
   label: z.string().optional(),
+  assigneeUserId: z.string().uuid().optional(),
 });
 
 export const patchCardBodySchema = z
@@ -24,6 +25,7 @@ export const patchCardBodySchema = z
     position: z.coerce.number().int().min(0).optional(),
     columnId: z.string().uuid().optional(),
     boardId: z.string().uuid().optional(),
+    assigneeUserId: z.string().uuid().nullable().optional(),
   })
   .strict();
 
