@@ -68,7 +68,7 @@ function BoardSearchField() {
   }, [localSearch, boardSearchQuery, setBoardSearchQuery]);
 
   return (
-    <div className="relative w-full min-h-11 sm:w-72">
+    <div className="relative w-full sm:w-72">
       <Search
         className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
         aria-hidden
@@ -78,7 +78,7 @@ function BoardSearchField() {
         value={localSearch}
         onChange={(e) => setLocalSearch(e.target.value)}
         placeholder="Search tasks…"
-        className="h-11 min-h-11 w-full rounded-lg border border-border/80 bg-background py-2 pl-8 pr-2.5 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 sm:h-9"
+        className="h-8 w-full rounded-lg border border-border/80 bg-background py-2 pl-8 pr-2.5 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 sm:h-9"
         aria-label="Search tasks by title or description"
       />
     </div>

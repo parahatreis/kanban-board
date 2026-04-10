@@ -98,7 +98,7 @@ export function WorkspaceSidebar({
 
         <div
           className={cn(
-            "mt-1 border-t border-border/50 pt-2",
+            "pt-2",
             collapsed ? "min-h-0 flex-1 md:overflow-y-auto" : "",
           )}
         >
@@ -130,11 +130,11 @@ export function WorkspaceSidebar({
                       to={`/board/${b.id}`}
                       title={collapsed ? b.name : undefined}
                       className={cn(
-                        "flex items-center gap-2 rounded-md py-1.5 text-xs font-medium transition-colors",
-                        collapsed ? "md:justify-center md:px-0 md:py-2" : "px-2",
+                        "flex items-center gap-2 rounded-md py-1.5 pl-4 text-xs font-medium transition-colors",
+                        collapsed ? "md:justify-center md:px-0 md:py-2" : "px-2 pl-8",
                         isActive
-                          ? "bg-background text-foreground shadow-sm"
-                          : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
+                          ? "text-foreground"
+                          : "text-muted-foreground",
                       )}
                     >
                       <span
