@@ -1,4 +1,5 @@
-<img width="2042" height="1060" alt="Screenshot 2026-04-09 at 19 06 09" src="https://github.com/user-attachments/assets/a227214c-0c40-4a51-873b-de49350316da" />
+<img width="2042" height="1060" alt="image" src="https://github.com/user-attachments/assets/ccaa19c4-c3c6-44b2-8982-9f483313e14d" />
+
 
 # Kanban board
 
