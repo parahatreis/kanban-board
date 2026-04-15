@@ -21,6 +21,14 @@ export async function listBoardsForUser(db: Database, userId: string) {
   return dbBoards.listBoardsByUser(db, userId);
 }
 
+export async function createBoardForUser(
+  db: Database,
+  userId: string,
+  name: string,
+) {
+  return dbBoards.insertBoard(db, { userId, name });
+}
+
 export async function getBoardDetail(
   db: Database,
   boardId: string,

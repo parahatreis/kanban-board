@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import {
   boardDetailQuerySchema,
+  createBoardBodySchema,
   createColumnBodySchema,
   reorderBoardColumnsBodySchema,
 } from "../schemas/http.js";
@@ -17,6 +18,16 @@ export const boardRoutes: FastifyPluginAsync = async (fastify) => {
       fastify.defaultUser.id,
     );
     return { boards };
+  });
+
+  fastify.post("/boards", async (request, reply) => {
+    const body = createBoardBodySchema.parse(request.body);
+    const board = await boardsService.createBoardForUser(
+      fastify.db,
+      fastify.defaultUser.id,
+      body.name,
+    );
+    return reply.status(201).send(board);
   });
 
   fastify.get("/boards/:boardId", async (request) => {

@@ -1,13 +1,24 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, LayoutGrid } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, LayoutGrid, Plus } from "lucide-react";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useBoardsDirectoryStore } from "@/stores/boards-directory-store";
+import { ApiError } from "@/api/client";
 
 function formatBoardDate(d: Date): string {
   try {
@@ -24,6 +35,14 @@ export function HomePage() {
   const error = useBoardsDirectoryStore((s) => s.error);
   const status = useBoardsDirectoryStore((s) => s.status);
   const loadBoardsDirectory = useBoardsDirectoryStore((s) => s.loadBoardsDirectory);
+  const createBoard = useBoardsDirectoryStore((s) => s.createBoard);
+  const navigate = useNavigate();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [boardName, setBoardName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void loadBoardsDirectory();
@@ -31,16 +50,85 @@ export function HomePage() {
 
   const loading = status === "loading" || boards === null;
 
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    const name = boardName.trim();
+    if (!name) return;
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const board = await createBoard(name);
+      setDialogOpen(false);
+      setBoardName("");
+      navigate(`/board/${board.id}`);
+    } catch (err) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Could not create board.";
+      setCreateError(msg);
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-y-auto px-4 py-8 sm:px-6 sm:py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Boards
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Open a board to manage columns and tasks.
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Boards
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Open a board to manage columns and tasks.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          className="shrink-0 gap-1.5"
+          onClick={() => {
+            setCreateError(null);
+            setBoardName("");
+            setDialogOpen(true);
+          }}
+        >
+          <Plus className="size-4" />
+          New board
+        </Button>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create board</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4" noValidate>
+            <div className="space-y-2">
+              <Label htmlFor="new-board-name">Board name</Label>
+              <Input
+                id="new-board-name"
+                ref={inputRef}
+                autoFocus
+                value={boardName}
+                onChange={(e) => setBoardName(e.target.value)}
+                placeholder="e.g. Sprint 12"
+              />
+            </div>
+            {createError ? (
+              <p className="text-sm text-destructive" role="alert">
+                {createError}
+              </p>
+            ) : null}
+            <DialogFooter>
+              <Button type="submit" disabled={creating || !boardName.trim()}>
+                {creating ? "Creating…" : "Create"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {error ? (
         <p className="text-sm text-destructive" role="alert">

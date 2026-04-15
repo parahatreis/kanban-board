@@ -1,6 +1,6 @@
 import type { BoardRow } from "shared";
 import { create } from "zustand";
-import { listBoards } from "@/api/boards";
+import { createBoard as apiCreateBoard, listBoards } from "@/api/boards";
 import { ApiError } from "@/api/client";
 
 type Status = "idle" | "loading" | "ready";
@@ -10,6 +10,7 @@ interface BoardsDirectoryState {
   error: string | null;
   status: Status;
   loadBoardsDirectory: () => Promise<void>;
+  createBoard: (name: string) => Promise<BoardRow>;
 }
 
 export const useBoardsDirectoryStore = create<BoardsDirectoryState>((set, get) => ({
@@ -31,5 +32,12 @@ export const useBoardsDirectoryStore = create<BoardsDirectoryState>((set, get) =
             : "Failed to load boards.";
       set({ boards: [], status: "ready", error: msg });
     }
+  },
+  createBoard: async (name: string) => {
+    const board = await apiCreateBoard(name);
+    set((state) => ({
+      boards: [board, ...(state.boards ?? [])],
+    }));
+    return board;
   },
 }));

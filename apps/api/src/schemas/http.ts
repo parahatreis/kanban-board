@@ -56,6 +56,10 @@ export const reorderBoardColumnsBodySchema = z.object({
   orderedColumnIds: z.array(z.string().uuid()).min(1),
 });
 
+export const createBoardBodySchema = z.object({
+  name: z.string().min(1),
+});
+
 export const createCardCommentBodySchema = z.object({
   body: z.string().min(1).max(8000),
 });
