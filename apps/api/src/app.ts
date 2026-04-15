@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import type { UserRow } from "shared";
 import type { Database } from "./db/client.js";
@@ -18,6 +19,7 @@ export async function buildApp(opts: { db: Database; defaultUser: UserRow }) {
   app.decorate("db", opts.db);
   app.decorate("defaultUser", opts.defaultUser);
   await registerErrorHandler(app);
+  await app.register(cors, { origin: true });
   await app.register(rateLimit, {
     max: Number(process.env.RATE_LIMIT_MAX ?? 600),
     timeWindow: "1 minute",
