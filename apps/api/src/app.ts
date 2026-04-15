@@ -18,8 +18,8 @@ export async function buildApp(opts: { db: Database; defaultUser: UserRow }) {
   });
   app.decorate("db", opts.db);
   app.decorate("defaultUser", opts.defaultUser);
-  await registerErrorHandler(app);
   await app.register(cors, { origin: true });
+  await registerErrorHandler(app);
   await app.register(rateLimit, {
     max: Number(process.env.RATE_LIMIT_MAX ?? 600),
     timeWindow: "1 minute",
