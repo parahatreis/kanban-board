@@ -18,7 +18,12 @@ export async function buildApp(opts: { db: Database; defaultUser: UserRow }) {
   });
   app.decorate("db", opts.db);
   app.decorate("defaultUser", opts.defaultUser);
-  await app.register(cors, { origin: true });
+  await app.register(cors, {
+    origin: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
+    credentials: true,
+  });
   await registerErrorHandler(app);
   await app.register(rateLimit, {
     max: Number(process.env.RATE_LIMIT_MAX ?? 600),
