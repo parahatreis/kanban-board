@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { useBoardStore } from "@/stores/board-store";
 
 const cardShadow =
-  "shadow-[0_1px_1px_0_rgb(0_0_0_/_0.05),0_1px_1px_-1px_rgb(0_0_0_/_0.05)]";
+  "shadow-[0_1px_3px_0_rgb(0_0_0/0.04)]";
 
 function formatCardShortDate(d: Date): string {
   try {
@@ -62,7 +62,7 @@ export function CardPreview({
   return (
     <div className="flex flex-col">
       <div className="flex flex-col gap-2 p-4">
-        <h3 className="min-w-0 text-sm font-semibold leading-snug tracking-tight text-foreground">
+        <h3 className="min-w-0 text-sm font-bold leading-snug tracking-tight text-foreground">
           {card.title}
         </h3>
         {desc ? (
@@ -72,7 +72,7 @@ export function CardPreview({
         ) : null}
       </div>
 
-      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 bg-muted/35 px-4 py-2.5">
+      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border/30 bg-accent/30 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2">
           <div
             className={cn(
@@ -119,9 +119,9 @@ function StaticCard({ card }: { card: CardRow }) {
     <>
       <CardSurface
         className={cn(
-          "cursor-pointer overflow-hidden rounded-2xl border border-border/50 bg-card transition-all",
+          "cursor-pointer overflow-hidden rounded-xl border border-border/30 bg-card transition-all",
           cardShadow,
-          "hover:border-border hover:shadow-md hover:bg-muted/20",
+          "hover:border-border/60 hover:shadow-[0_4px_16px_rgb(0_0_0/0.06)]",
         )}
         onClick={() => setDetailsOpen(true)}
         onKeyDown={(e) => {
@@ -189,9 +189,9 @@ function SortableCardInner({ card }: { card: CardRow }) {
         ref={setNodeRef}
         style={style}
         className={cn(
-          "cursor-grab touch-none overflow-hidden rounded-2xl border border-border/80 bg-card transition-all",
+          "cursor-grab touch-none overflow-hidden rounded-xl border border-border/30 bg-card transition-all",
           cardShadow,
-          "hover:border-border hover:shadow-md hover:bg-muted/15",
+          "hover:border-border/60 hover:shadow-[0_4px_16px_rgb(0_0_0/0.06)]",
           isDragging && "cursor-grabbing",
         )}
         {...attributes}

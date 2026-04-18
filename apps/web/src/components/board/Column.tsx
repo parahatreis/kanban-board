@@ -180,9 +180,9 @@ export function Column({
     <section
       ref={setSortableRef}
       style={sortableStyle}
-      className="flex w-[min(100%,320px)] min-w-[min(100%,280px)] max-w-[320px] shrink-0 flex-col self-stretch rounded-xl bg-card"
+      className="flex w-[min(100%,320px)] min-w-[min(100%,280px)] max-w-[320px] shrink-0 flex-col self-stretch rounded-xl border border-border/30 bg-card shadow-[0_1px_3px_0_rgb(0_0_0/0.03)]"
     >
-      <div className="shrink-0 flex items-center gap-1 border-b border-border/60 px-2 py-2.5">
+      <div className="shrink-0 flex items-center gap-1 border-b border-border/30 px-2 py-2.5">
         <button
           type="button"
           className="flex size-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground hover:bg-muted/80 hover:text-foreground active:cursor-grabbing"
@@ -193,7 +193,7 @@ export function Column({
           <GripVertical className="size-3.5" strokeWidth={1.75} />
         </button>
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-semibold text-[13px] leading-tight tracking-tight text-foreground">
+          <h2 className="truncate font-bold text-[13px] leading-tight tracking-tight text-foreground">
             {column.title}
             <span className="ml-1.5 font-medium text-muted-foreground">
               ({columnCards.length})
@@ -303,7 +303,7 @@ export function Column({
           </div>
         </div>
 
-        <div className="shrink-0 border-t border-border/60 p-2">
+        <div className="shrink-0 border-t border-border/30 p-2">
           <Button
             type="button"
             variant="ghost"

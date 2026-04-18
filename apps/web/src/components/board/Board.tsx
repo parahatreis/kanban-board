@@ -78,7 +78,7 @@ function BoardSearchField() {
         value={localSearch}
         onChange={(e) => setLocalSearch(e.target.value)}
         placeholder="Search tasks…"
-        className="h-8 w-full rounded-lg border border-border/80 bg-background py-2 pl-8 pr-2.5 text-xs text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 sm:h-9"
+        className="h-8 w-full rounded-lg border border-border bg-card py-2 pl-8 pr-2.5 text-xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 sm:h-9"
         aria-label="Search tasks by title or description"
       />
     </div>
@@ -350,7 +350,7 @@ export function Board() {
           onAddTask={() => openCreate()}
         />
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-6 pt-2 sm:px-6 lg:px-8">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pb-6 pt-3 sm:px-6 lg:px-8">
           <div className="mb-2 shrink-0 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               Columns
@@ -377,7 +377,7 @@ export function Board() {
             <Button
               type="button"
               variant="outline"
-              className="h-auto min-h-[120px] w-[min(100%,200px)] shrink-0 flex-col gap-2 self-stretch border-dashed py-6 text-xs font-medium text-muted-foreground"
+              className="h-auto min-h-[120px] w-[min(100%,200px)] shrink-0 flex-col gap-2 self-stretch border-dashed border-border/60 py-6 text-xs font-medium text-muted-foreground hover:border-border hover:text-foreground"
               onClick={() => {
                 setAddColumnErr(null);
                 addColForm.reset({ title: "" });
@@ -436,13 +436,13 @@ export function Board() {
       </div>
       <DragOverlay dropAnimation={null}>
         {activeColumn ? (
-          <div className="flex w-[min(100vw-2rem,320px)] min-w-[min(100%,280px)] max-w-[320px] flex-col rounded-xl border border-border/80 bg-card p-4 opacity-95 shadow-lg ring-2 ring-primary/20">
-            <p className="font-semibold text-sm text-foreground">{activeColumn.title}</p>
+          <div className="flex w-[min(100vw-2rem,320px)] min-w-[min(100%,280px)] max-w-[320px] flex-col rounded-xl border border-border/40 bg-card p-4 opacity-95 shadow-[0_8px_30px_rgb(0_0_0/0.1)] ring-2 ring-primary/15">
+            <p className="font-bold text-sm text-foreground">{activeColumn.title}</p>
             <p className="mt-1 text-[11px] text-muted-foreground">Column</p>
           </div>
         ) : null}
         {canDrag && activeCard ? (
-          <div className="w-[min(100vw-2rem,320px)] overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_1px_3px_0_rgb(0_0_0_/_0.1),0_1px_2px_-1px_rgb(0_0_0_/_0.1)] ring-2 ring-primary/15">
+          <div className="w-[min(100vw-2rem,320px)] overflow-hidden rounded-2xl border border-border/40 bg-card shadow-[0_8px_30px_rgb(0_0_0/0.1)] ring-2 ring-primary/10">
             <CardPreview card={activeCard} users={users} />
           </div>
         ) : null}

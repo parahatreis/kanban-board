@@ -14,10 +14,10 @@ export function BoardWorkspaceChrome({
   onAddTask: () => void;
 }) {
   return (
-    <div className="shrink-0 border-b border-border/70 bg-background">
-      <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
+    <div className="shrink-0 border-b border-border/40 bg-card">
+      <div className="flex flex-col gap-5 px-5 py-5 sm:px-6 lg:px-8">
         <div className="min-w-0 space-y-0.5">
-          <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             {boardName}
           </h1>
         </div>
@@ -30,7 +30,7 @@ export function BoardWorkspaceChrome({
               type="button"
               onClick={onAddTask}
               size="sm"
-              className="h-8 w-full shrink-0 gap-1.5 text-xs shadow-md sm:w-auto"
+              className="h-8 w-full shrink-0 gap-1.5 text-xs sm:w-auto"
             >
               <Plus className="size-3.5" />
               Add task

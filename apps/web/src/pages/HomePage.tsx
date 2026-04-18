@@ -75,13 +75,13 @@ export function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-y-auto px-4 py-8 sm:px-6 sm:py-10">
-      <div className="mb-8 flex items-start justify-between gap-4">
+    <main className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col overflow-y-auto px-6 py-10 sm:px-8 sm:py-14">
+      <div className="mb-10 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Boards
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             Open a board to manage columns and tasks.
           </p>
         </div>
@@ -143,18 +143,18 @@ export function HomePage() {
           No boards yet. Seed the database and run the API to see boards here.
         </p>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {boards.map((row) => (
             <li key={row.id}>
               <Link to={`/board/${row.id}`} className="group block h-full outline-none">
-                <Card className="h-full min-h-[140px] border-border/80 bg-card transition-shadow hover:border-border hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring/40">
-                  <CardHeader className="flex h-full flex-col gap-3 pb-4">
+                <Card className="h-full min-h-[140px] border-border/40 bg-card transition-all hover:border-border/70 hover:shadow-[0_4px_16px_rgb(0_0_0/0.06)] focus-visible:ring-2 focus-visible:ring-ring/30">
+                  <CardHeader className="flex h-full flex-col gap-3 pb-5">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted/80 text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-muted-foreground transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                           <LayoutGrid className="size-4" strokeWidth={1.75} aria-hidden />
                         </span>
-                        <CardTitle className="line-clamp-2 text-base font-semibold leading-snug">
+                        <CardTitle className="line-clamp-2 text-base font-bold leading-snug tracking-tight">
                           {row.name}
                         </CardTitle>
                       </div>

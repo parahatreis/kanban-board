@@ -208,7 +208,7 @@ export function CardDetailsSheet({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           className={cn(
-            "flex max-h-[min(90vh,900px)] w-[min(100vw-1.5rem,960px)] flex-col gap-0 overflow-hidden p-0 lg:max-w-4xl",
+            "flex max-h-[min(90vh,900px)] w-[min(100vw-1.5rem,960px)] flex-col gap-0 overflow-hidden rounded-xl p-0 lg:max-w-4xl",
           )}
         >
           <DialogDescription className="sr-only">
@@ -220,7 +220,7 @@ export function CardDetailsSheet({
             className="flex min-h-0 flex-1 flex-col"
             noValidate
           >
-            <DialogHeader className="shrink-0 space-y-3 border-b border-border/70 px-5 py-4 text-left">
+            <DialogHeader className="shrink-0 space-y-3 border-b border-border/30 px-5 py-4 text-left">
               <DialogTitle className="sr-only">Edit card</DialogTitle>
               <div className="space-y-2 pr-6">
                 <Label htmlFor="card-detail-title" className="text-[11px] text-muted-foreground">
@@ -273,7 +273,7 @@ export function CardDetailsSheet({
                           comments.map((c) => (
                             <li
                               key={c.id}
-                              className="rounded-lg border border-border/50 bg-card px-3 py-2.5 text-sm shadow-sm"
+                              className="rounded-lg border border-border/30 bg-card px-3 py-2.5 text-sm"
                             >
                               <div className="flex flex-wrap items-baseline justify-between gap-2 text-[11px] text-muted-foreground">
                                 <span className="font-medium text-foreground">
@@ -317,7 +317,7 @@ export function CardDetailsSheet({
                 </div>
 
                 <aside
-                  className="min-w-0 space-y-4 border-t border-border/60 pt-6 md:border-t-0 md:border-l md:pt-0 md:pl-6"
+                  className="min-w-0 space-y-4 border-t border-border/30 pt-6 md:border-t-0 md:border-l md:border-border/30 md:pt-0 md:pl-6"
                   aria-labelledby="card-meta-heading"
                 >
                   <h2
@@ -359,7 +359,7 @@ export function CardDetailsSheet({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1 border-t border-border/50 pt-3">
+                  <div className="space-y-1 border-t border-border/30 pt-3">
                     <span className="text-[11px] font-medium text-muted-foreground">Created</span>
                     <p className="flex items-center gap-1.5 text-sm tabular-nums text-muted-foreground">
                       <Calendar className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
@@ -378,7 +378,7 @@ export function CardDetailsSheet({
               </p>
             ) : null}
 
-            <DialogFooter className="shrink-0 flex-col gap-2 border-t border-border/70 bg-muted/20 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <DialogFooter className="shrink-0 flex-col gap-2 border-t border-border/30 bg-accent/20 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="destructive"

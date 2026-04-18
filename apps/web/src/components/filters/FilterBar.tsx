@@ -35,7 +35,7 @@ export function FilterBar() {
           onValueChange={(v) => setLabelFilter(v === "__all__" ? "" : v)}
         >
           <SelectTrigger
-            className="h-8 w-full min-w-[140px] max-w-[220px] border-border/80 bg-background text-xs shadow-sm sm:w-[200px]"
+            className="h-8 w-full min-w-[140px] max-w-[220px] border-border bg-card text-xs sm:w-[200px]"
             aria-label="Filter by label"
           >
             <SelectValue placeholder="All labels" />
@@ -56,7 +56,7 @@ export function FilterBar() {
           }}
         >
           <SelectTrigger
-            className="h-8 w-full min-w-[140px] max-w-[200px] border-border/80 bg-background text-xs shadow-sm sm:w-[180px]"
+            className="h-8 w-full min-w-[140px] max-w-[200px] border-border bg-card text-xs sm:w-[180px]"
             aria-label="Group cards by"
           >
             <SelectValue placeholder="Group by" />

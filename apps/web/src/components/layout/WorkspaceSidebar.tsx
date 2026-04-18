@@ -39,24 +39,24 @@ export function WorkspaceSidebar({
   return (
     <aside
       className={cn(
-        "flex h-full min-h-0 flex-col border-r border-border/70 bg-sidebar text-sidebar-foreground",
+        "flex h-full min-h-0 flex-col border-r border-border/40 bg-sidebar text-sidebar-foreground",
         collapsed ? "md:items-stretch" : "",
         className,
       )}
     >
       <div
         className={cn(
-          "flex items-center gap-2 border-b border-border/60 px-2 py-3",
+          "flex items-center gap-2 border-b border-border/40 px-2 py-3",
           collapsed ? "md:flex-col md:justify-center md:gap-2" : "justify-between",
         )}
       >
         {!collapsed ? (
-          <span className="truncate px-1 text-sm font-semibold tracking-tight text-foreground">
+          <span className="truncate px-1 text-sm font-bold tracking-tight text-foreground">
             Kanban
           </span>
         ) : (
           <>
-            <span className="truncate px-1 text-sm font-semibold tracking-tight text-foreground md:hidden">
+            <span className="truncate px-1 text-sm font-bold tracking-tight text-foreground md:hidden">
               Kanban
             </span>
             <span className="hidden px-1 text-center text-sm font-bold leading-none text-foreground md:block">
@@ -98,8 +98,8 @@ export function WorkspaceSidebar({
               "flex shrink-0 items-center gap-2.5 rounded-md py-2 text-xs font-medium transition-colors",
               collapsed ? "md:justify-center md:px-0" : "px-2",
               boardsActive
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-background/80 hover:text-foreground",
+                ? "bg-accent text-foreground"
+                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
             )}
           >
             <LayoutGrid className="size-4 shrink-0 opacity-90" strokeWidth={1.75} />
@@ -114,7 +114,7 @@ export function WorkspaceSidebar({
           <div
             className={cn(
               "mt-1 min-h-0",
-              collapsed ? "flex-1 md:overflow-y-auto" : "border-l border-border/60 pl-2 ml-1.5",
+              collapsed ? "flex-1 md:overflow-y-auto" : "border-l border-border/40 pl-2 ml-1.5",
             )}
           >
             {listLoading ? (

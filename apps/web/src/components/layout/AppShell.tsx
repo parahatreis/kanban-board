@@ -56,7 +56,7 @@ export function AppShell() {
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur md:hidden">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/40 bg-card/95 px-4 py-3 backdrop-blur md:hidden">
           <Button
             type="button"
             variant="outline"
@@ -69,7 +69,7 @@ export function AppShell() {
           </Button>
           <Link
             to="/"
-            className="truncate text-sm font-semibold tracking-tight text-foreground"
+            className="truncate text-sm font-bold tracking-tight text-foreground"
           >
             Kanban
           </Link>
